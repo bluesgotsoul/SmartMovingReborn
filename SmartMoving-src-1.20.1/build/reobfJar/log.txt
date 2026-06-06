@@ -239,3 +239,4 @@ Writing Output: E:\SmartMoving\SmartMoving-src-1.20.1\build\reobfJar\output.jar
   net/smart/utilities/Reflect.class
   pack.mcmeta
   smartmoving.mixins.json
+  smartmoving.refmap.json
