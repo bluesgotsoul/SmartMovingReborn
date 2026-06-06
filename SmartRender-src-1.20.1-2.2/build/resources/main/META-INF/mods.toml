@@ -1,0 +1,31 @@
+# Smart Render - ported to Minecraft 1.20.1 Forge
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+issueTrackerURL="http://www.minecraftforum.net/topic/361430-"
+# Smart Render is purely client-side (replaces the player renderer).
+clientSideOnly=true
+
+[[mods]]
+modId="smartrender"
+version="2.2"
+displayName="Example Mod"
+logoFile="icon.png"
+displayURL="http://www.minecraftforum.net/topic/361430-"
+authors="YourNameHere, OtherNameHere"
+description='''Example mod description.
+Newline characters can be used and will be replaced properly.'''
+
+[[dependencies.smartrender]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="CLIENT"
+
+[[dependencies.smartrender]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.21)"
+    ordering="NONE"
+    side="CLIENT"

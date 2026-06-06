@@ -1,0 +1,10 @@
+[21:45:54] [main/INFO]: Writing debug log file accesstransform.log
+[21:45:54] [main/INFO]: Access Transformer processor running version 8.2.14
+[21:45:54] [main/INFO]: Command line arguments [--inJar, F:\SmartMovingg\SmartRender-src-1.20.1-2.2\build\fg_cache\net\minecraftforge\forge\1.20.1-47.3.0\forge-1.20.1-47.3.0-injected.jar, --outJar, F:\SmartMovingg\SmartRender-src-1.20.1-2.2\build\fg_cache\net\minecraftforge\forge\1.20.1-47.3.0_mapped_official_1.20.1\forge-1.20.1-47.3.0_mapped_official_1.20.1.jar, --logFile, accesstransform.log, --atFile, F:\SmartMovingg\SmartRender-src-1.20.1-2.2\src\main\resources\META-INF\accesstransformer.cfg, --atFile, F:\SmartMovingg\SmartRender-src-1.20.1-2.2\build\_atJar_4\parent_at.cfg]
+[21:45:54] [main/INFO]: Reading from F:\SmartMovingg\SmartRender-src-1.20.1-2.2\build\fg_cache\net\minecraftforge\forge\1.20.1-47.3.0\forge-1.20.1-47.3.0-injected.jar
+[21:45:54] [main/INFO]: Writing to F:\SmartMovingg\SmartRender-src-1.20.1-2.2\build\fg_cache\net\minecraftforge\forge\1.20.1-47.3.0_mapped_official_1.20.1\forge-1.20.1-47.3.0_mapped_official_1.20.1.jar
+[21:45:54] [main/INFO]: Transformer file F:\SmartMovingg\SmartRender-src-1.20.1-2.2\src\main\resources\META-INF\accesstransformer.cfg
+[21:45:54] [main/INFO]: Transformer file F:\SmartMovingg\SmartRender-src-1.20.1-2.2\build\_atJar_4\parent_at.cfg
+[21:45:54] [main/WARN]: Found existing output jar F:\SmartMovingg\SmartRender-src-1.20.1-2.2\build\fg_cache\net\minecraftforge\forge\1.20.1-47.3.0_mapped_official_1.20.1\forge-1.20.1-47.3.0_mapped_official_1.20.1.jar, overwriting
+[21:45:54] [main/DEBUG]: Loading access transformer accesstransformer.cfg from path F:\SmartMovingg\SmartRender-src-1.20.1-2.2\src\main\resources\META-INF\accesstransformer.cfg
+[21:45:54] [main/ERROR]: Invalid access transformer line in accesstransformer.cfg: #

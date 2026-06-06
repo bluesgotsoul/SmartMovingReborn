@@ -1,0 +1,37 @@
+# Smart Moving - ported to Minecraft 1.20.1 Forge
+modLoader="javafml"
+loaderVersion="[47,)"
+license="GPL-3.0"
+issueTrackerURL="http://www.minecraftforum.net/topic/361430-"
+
+[[mods]]
+modId="smartmoving"
+version="16.3"
+displayName="Smart Moving"
+logoFile="icon.png"
+displayURL="http://www.minecraftforum.net/topic/361430-"
+authors="Divisor, ported by User"
+credits="_DarKShaM_, Cassiobsk8, Dunncann for translations"
+description='''Smart Moving port for 1.20.1'''
+
+# Smart Moving needs Smart Render to replace the player model/renderer.
+[[dependencies.smartmoving]]
+    modId="smartrender"
+    mandatory=true
+    versionRange="[2.2,)"
+    ordering="AFTER"
+    side="CLIENT"
+
+[[dependencies.smartmoving]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.smartmoving]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.21)"
+    ordering="NONE"
+    side="BOTH"

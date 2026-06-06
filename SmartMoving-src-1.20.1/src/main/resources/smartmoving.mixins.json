@@ -1,0 +1,38 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "net.smart.moving.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "smartmoving.refmap.json",
+  "mixins": [
+    "EntityMixin",
+    "LivingEntityMixin",
+    "PlayerMixin",
+    "ServerPlayerMixin",
+    "EntityStuckAccessor",
+    "PlayerInvoker",
+    "ServerGamePacketListenerAccessor",
+    "ServerGamePacketHungerMixin",
+    "ServerPlayerGameModeUseMixin",
+    "LivingEntityAccessor",
+    "EntitySaveAccessor"
+  ],
+  "client": [
+    "LocalPlayerMixin",
+    "EntityClientMoveMixin",
+    "LivingEntityClientTravelMixin",
+    "LivingEntityClientClimbMixin",
+    "EntityClientWalkMixin",
+    "PlayerClientPushMixin",
+    "LivingEntityClientJumpMixin",
+    "PlayerClientSleepMixin",
+    "PlayerRendererMovingMixin",
+    "SmartRenderRenderMixin",
+    "LivingEntityRendererNameMixin",
+    "MultiPlayerGameModeClientUseMixin",
+    "LocalPlayerAbsMoveMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

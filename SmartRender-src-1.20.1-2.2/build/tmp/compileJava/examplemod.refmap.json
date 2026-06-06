@@ -1,0 +1,78 @@
+{
+  "mappings": {
+    "net/smart/render/mixin/LivingEntityRendererMixin": {
+      "getBob": "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;m_6930_(Lnet/minecraft/world/entity/LivingEntity;F)F"
+    },
+    "net/smart/render/mixin/PlayerRendererMixin": {
+      "setupRotations": "Lnet/minecraft/client/renderer/entity/player/PlayerRenderer;m_7523_(Lnet/minecraft/client/player/AbstractClientPlayer;Lcom/mojang/blaze3d/vertex/PoseStack;FFF)V",
+      "render": "Lnet/minecraft/client/renderer/entity/player/PlayerRenderer;m_7392_(Lnet/minecraft/client/player/AbstractClientPlayer;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
+    },
+    "net/smart/render/mixin/HumanoidArmorLayerAccessor": {
+      "innerModel": "f_117071_:Lnet/minecraft/client/model/HumanoidModel;",
+      "outerModel": "f_117072_:Lnet/minecraft/client/model/HumanoidModel;"
+    },
+    "net/smart/render/mixin/LivingEntityRendererAccessor": {
+      "layers": "f_115291_:Ljava/util/List;",
+      "model": "f_115290_:Lnet/minecraft/client/model/EntityModel;"
+    },
+    "net/smart/render/mixin/CapeLayerMixin": {
+      "render": "Lnet/minecraft/client/renderer/entity/layers/CapeLayer;m_6494_(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V"
+    },
+    "net/smart/render/mixin/PlayerModelAccessor": {
+      "cloak": "f_103373_:Lnet/minecraft/client/model/geom/ModelPart;",
+      "ear": "f_103379_:Lnet/minecraft/client/model/geom/ModelPart;",
+      "slim": "f_103380_:Z"
+    },
+    "net/smart/render/mixin/WalkAnimationStateAccessor": {
+      "speedOld": "f_267406_:F",
+      "position": "f_267358_:F",
+      "speed": "f_267371_:F"
+    },
+    "net/smart/render/mixin/LocalPlayerStatisticsMixin": {
+      "aiStep": "Lnet/minecraft/client/player/LocalPlayer;m_8107_()V",
+      "rideTick": "Lnet/minecraft/client/player/LocalPlayer;m_6083_()V"
+    },
+    "net/smart/render/mixin/ModelPartAccessor": {
+      "cubes": "f_104212_:Ljava/util/List;"
+    }
+  },
+  "data": {
+    "searge": {
+      "net/smart/render/mixin/LivingEntityRendererMixin": {
+        "getBob": "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;m_6930_(Lnet/minecraft/world/entity/LivingEntity;F)F"
+      },
+      "net/smart/render/mixin/PlayerRendererMixin": {
+        "setupRotations": "Lnet/minecraft/client/renderer/entity/player/PlayerRenderer;m_7523_(Lnet/minecraft/client/player/AbstractClientPlayer;Lcom/mojang/blaze3d/vertex/PoseStack;FFF)V",
+        "render": "Lnet/minecraft/client/renderer/entity/player/PlayerRenderer;m_7392_(Lnet/minecraft/client/player/AbstractClientPlayer;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
+      },
+      "net/smart/render/mixin/HumanoidArmorLayerAccessor": {
+        "innerModel": "f_117071_:Lnet/minecraft/client/model/HumanoidModel;",
+        "outerModel": "f_117072_:Lnet/minecraft/client/model/HumanoidModel;"
+      },
+      "net/smart/render/mixin/LivingEntityRendererAccessor": {
+        "layers": "f_115291_:Ljava/util/List;",
+        "model": "f_115290_:Lnet/minecraft/client/model/EntityModel;"
+      },
+      "net/smart/render/mixin/CapeLayerMixin": {
+        "render": "Lnet/minecraft/client/renderer/entity/layers/CapeLayer;m_6494_(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V"
+      },
+      "net/smart/render/mixin/PlayerModelAccessor": {
+        "cloak": "f_103373_:Lnet/minecraft/client/model/geom/ModelPart;",
+        "ear": "f_103379_:Lnet/minecraft/client/model/geom/ModelPart;",
+        "slim": "f_103380_:Z"
+      },
+      "net/smart/render/mixin/WalkAnimationStateAccessor": {
+        "speedOld": "f_267406_:F",
+        "position": "f_267358_:F",
+        "speed": "f_267371_:F"
+      },
+      "net/smart/render/mixin/LocalPlayerStatisticsMixin": {
+        "aiStep": "Lnet/minecraft/client/player/LocalPlayer;m_8107_()V",
+        "rideTick": "Lnet/minecraft/client/player/LocalPlayer;m_6083_()V"
+      },
+      "net/smart/render/mixin/ModelPartAccessor": {
+        "cubes": "f_104212_:Ljava/util/List;"
+      }
+    }
+  }
+}
