@@ -40,32 +40,32 @@ import net.smart.render.statistics.*;
 //     renderLayers     -> renderSpecialsBefore/After(..)  (driven from CapeLayerMixin)
 //     handleRotationFloat -> before/afterHandleRotationFloat(..)  (driven around getBob)
 //   All numeric logic below is copied verbatim from the 1.8.9 source.
-public class SmartRenderRender extends SmartRenderContext
-{
+public class SmartRenderRender extends SmartRenderContext {
 	public static SmartRenderModel CurrentMainModel;
 
 	public IRenderPlayer irp;
 
-	public SmartRenderRender(IRenderPlayer irp)
-	{
+	public SmartRenderRender(IRenderPlayer irp) {
 		this.irp = irp;
 
 		modelBipedMain = irp.createModel(irp.getModelBipedMain(), 0.0F, irp.getSmallArms()).getRenderModel();
-		SmartRenderModel modelArmorChestplate = irp.createModel(irp.getModelArmorChestplate(), 1.0F, false).getRenderModel();
+		SmartRenderModel modelArmorChestplate = irp.createModel(irp.getModelArmorChestplate(), 1.0F, false)
+				.getRenderModel();
 		SmartRenderModel modelArmor = irp.createModel(irp.getModelArmor(), 0.5F, false).getRenderModel();
 
-		irp.initialize((PlayerModel<?>)modelBipedMain.mp, modelArmorChestplate.mp, modelArmor.mp);
+		irp.initialize((PlayerModel<?>) modelBipedMain.mp, modelArmorChestplate.mp, modelArmor.mp);
 	}
 
 	// == doRender (1.8.9) split into HEAD (pre) + RETURN (post) ==
-	// In 1.8.9 "isInventory" was derived from d/d1/d2/f/renderPartialTicks being zero/one. The
-	// 1.20.1 PlayerRenderer.render signature no longer exposes those offsets, so PlayerRendererMixin
-	// decides isInventory and passes it in. NOTE[inventory-detect]: InventoryScreen detection; verify at runtime.
-	public void doRenderPre(AbstractClientPlayer entityplayer, float renderPartialTicks, boolean isInventory)
-	{
+	// In 1.8.9 "isInventory" was derived from d/d1/d2/f/renderPartialTicks being
+	// zero/one. The
+	// 1.20.1 PlayerRenderer.render signature no longer exposes those offsets, so
+	// PlayerRendererMixin
+	// decides isInventory and passes it in. NOTE[inventory-detect]: InventoryScreen
+	// detection; verify at runtime.
+	public void doRenderPre(AbstractClientPlayer entityplayer, float renderPartialTicks, boolean isInventory) {
 		SmartStatistics statistics = SmartStatisticsFactory.getInstance(entityplayer);
-		if(statistics != null)
-		{
+		if (statistics != null) {
 			boolean isSleeping = entityplayer.isSleeping();
 
 			float totalVerticalDistance = statistics.getTotalVerticalDistance(renderPartialTicks);
@@ -80,8 +80,7 @@ public class SmartRenderRender extends SmartRenderContext
 			float currentVerticalAngle = 0;
 			float currentHorizontalAngle = 0;
 
-			if (!isInventory)
-			{
+			if (!isInventory) {
 				double xDiff = entityplayer.getX() - entityplayer.xo;
 				double yDiff = entityplayer.getY() - entityplayer.yo;
 				double zDiff = entityplayer.getZ() - entityplayer.zo;
@@ -91,13 +90,13 @@ public class SmartRenderRender extends SmartRenderContext
 				distance = Math.sqrt(horizontalDistance * horizontalDistance + verticalDistance * verticalDistance);
 
 				currentCameraAngle = entityplayer.getYRot() / RadiantToAngle;
-				currentVerticalAngle = (float)Math.atan(yDiff / horizontalDistance);
-				if(Float.isNaN(currentVerticalAngle))
+				currentVerticalAngle = (float) Math.atan(yDiff / horizontalDistance);
+				if (Float.isNaN(currentVerticalAngle))
 					currentVerticalAngle = Quarter;
 
-				currentHorizontalAngle = (float)-Math.atan(xDiff / zDiff);
+				currentHorizontalAngle = (float) -Math.atan(xDiff / zDiff);
 				if (Float.isNaN(currentHorizontalAngle))
-					if(Float.isNaN(statistics.prevHorizontalAngle))
+					if (Float.isNaN(statistics.prevHorizontalAngle))
 						currentHorizontalAngle = currentCameraAngle;
 					else
 						currentHorizontalAngle = statistics.prevHorizontalAngle;
@@ -109,8 +108,7 @@ public class SmartRenderRender extends SmartRenderContext
 
 			IModelPlayer[] modelPlayers = irp.getRenderModels();
 
-			for(int i = 0; i < modelPlayers.length; i++)
-			{
+			for (int i = 0; i < modelPlayers.length; i++) {
 				SmartRenderModel modelPlayer = modelPlayers[i].getRenderModel();
 
 				modelPlayer.isInventory = isInventory;
@@ -134,45 +132,41 @@ public class SmartRenderRender extends SmartRenderContext
 		CurrentMainModel = modelBipedMain;
 	}
 
-	public void doRenderPost()
-	{
+	public void doRenderPost() {
 		CurrentMainModel = null;
 	}
 
 	// == rotateCorpse (1.8.9) -> setupRotations pre-hook ==
-	// Returns the rotation value that should be handed to the vanilla setupRotations body
-	// (0 when Smart Render takes over the body rotation, the original value otherwise).
-	public float setupRotationsPre(AbstractClientPlayer entityplayer, float totalTime, float actualRotation, float f2)
-	{
+	// Returns the rotation value that should be handed to the vanilla
+	// setupRotations body
+	// (0 when Smart Render takes over the body rotation, the original value
+	// otherwise).
+	public float setupRotationsPre(AbstractClientPlayer entityplayer, float totalTime, float actualRotation, float f2) {
 		boolean isLocal = entityplayer instanceof LocalPlayer;
-		boolean isInventory = f2 == 1.0F && isLocal && Minecraft.getInstance().screen instanceof InventoryScreen;
-		if(!isInventory)
-		{
+		boolean isInventory = renderingInventory;
+		if (!isInventory) {
 			float forwardRotation = entityplayer.yRotO + (entityplayer.getYRot() - entityplayer.yRotO) * f2;
 
-			if(entityplayer.isSleeping())
-			{
+			if (entityplayer.isSleeping()) {
 				actualRotation = 0;
 				forwardRotation = 0;
 			}
 
 			float workingAngle;
 			Minecraft minecraft = Minecraft.getInstance();
-			if(!isLocal)
-			{
+			if (!isLocal) {
 				workingAngle = -entityplayer.getYRot();
 				workingAngle += minecraft.getCameraEntity().getYRot();
-			}
-			else
+			} else
 				workingAngle = actualRotation - getPreviousRendererData(entityplayer).rotateAngleY * RadiantToAngle;
 
-			if(minecraft.options.getCameraType() == CameraType.THIRD_PERSON_FRONT && !((Player)minecraft.getCameraEntity()).isSleeping())
+			if (minecraft.options.getCameraType() == CameraType.THIRD_PERSON_FRONT
+					&& !((Player) minecraft.getCameraEntity()).isSleeping())
 				workingAngle += 180F;
 
 			IModelPlayer[] modelPlayers = irp.getRenderModels();
 
-			for(int i = 0; i < modelPlayers.length; i++)
-			{
+			for (int i = 0; i < modelPlayers.length; i++) {
 				SmartRenderModel modelPlayer = modelPlayers[i].getRenderModel();
 
 				modelPlayer.actualRotation = actualRotation;
@@ -186,51 +180,48 @@ public class SmartRenderRender extends SmartRenderContext
 		return actualRotation;
 	}
 
-	// == renderLayers (1.8.9 renderSpecials) -> before/after hooks (driven from CapeLayerMixin) ==
-	public void renderSpecialsBefore(AbstractClientPlayer entityPlayer, float f3)
-	{
+	// == renderLayers (1.8.9 renderSpecials) -> before/after hooks (driven from
+	// CapeLayerMixin) ==
+	public void renderSpecialsBefore(AbstractClientPlayer entityPlayer, float f3) {
 		modelBipedMain.bipedEars.beforeRender(entityPlayer);
 		modelBipedMain.bipedCloak.beforeRender(entityPlayer, f3);
 	}
 
-	public void renderSpecialsAfter()
-	{
+	public void renderSpecialsAfter() {
 		modelBipedMain.bipedCloak.afterRender();
 		modelBipedMain.bipedEars.afterRender();
 	}
 
 	@SuppressWarnings({ "static-method", "unused" })
-	public void beforeHandleRotationFloat(AbstractClientPlayer entityPlayer, float f)
-	{
+	public void beforeHandleRotationFloat(AbstractClientPlayer entityPlayer, float f) {
 		SmartStatistics statistics = SmartStatisticsFactory.getInstance(entityPlayer);
 		if (statistics != null)
 			entityPlayer.tickCount += statistics.ticksRiding;
 	}
 
 	@SuppressWarnings({ "static-method", "unused" })
-	public void afterHandleRotationFloat(AbstractClientPlayer entityPlayer, float f)
-	{
+	public void afterHandleRotationFloat(AbstractClientPlayer entityPlayer, float f) {
 		SmartStatistics statistics = SmartStatisticsFactory.getInstance(entityPlayer);
 		if (statistics != null)
 			entityPlayer.tickCount -= statistics.ticksRiding;
 	}
 
-	public static RendererData getPreviousRendererData(AbstractClientPlayer entityplayer)
-	{
-		if(++previousRendererDataAccessCounter > 1000)
-		{
+	public static boolean renderingInventory = false;
+
+	public static RendererData getPreviousRendererData(AbstractClientPlayer entityplayer) {
+		if (++previousRendererDataAccessCounter > 1000) {
 			List<? extends Player> players = Minecraft.getInstance().level.players();
 
 			Iterator<AbstractClientPlayer> iterator = previousRendererData.keySet().iterator();
-			while(iterator.hasNext())
-				if(!players.contains(iterator.next()))
+			while (iterator.hasNext())
+				if (!players.contains(iterator.next()))
 					iterator.remove();
 
 			previousRendererDataAccessCounter = 0;
 		}
 
 		RendererData result = previousRendererData.get(entityplayer);
-		if(result == null)
+		if (result == null)
 			previousRendererData.put(entityplayer, result = new RendererData());
 		return result;
 	}

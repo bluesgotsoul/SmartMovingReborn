@@ -8,6 +8,9 @@
   "client": [
     "CapeLayerMixin",
     "HumanoidArmorLayerAccessor",
+    "HumanoidArmorLayerMixin",
+    "InventoryScreenMixin",
+    "ItemInHandLayerMixin",
     "LivingEntityRendererAccessor",
     "LivingEntityRendererMixin",
     "LocalPlayerStatisticsMixin",

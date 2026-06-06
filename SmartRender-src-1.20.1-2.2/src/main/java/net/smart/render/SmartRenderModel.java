@@ -49,24 +49,30 @@ import static net.smart.render.ModelRotationRenderer.CurrentPoseStack;
 // (replaces the 1.8.9 ModelRenderer cubeList copy + display-list compilation). The
 // transform skeleton, render order and fade math are kept exactly as the original.
 // ------------------------------------------------------------------
-public class SmartRenderModel extends SmartRenderContext
-{
+public class SmartRenderModel extends SmartRenderContext {
 	public IModelPlayer imp;
 	public HumanoidModel<?> mp;
 	public boolean isModelPlayer;
 	public boolean smallArms;
 
-	public SmartRenderModel(boolean b, HumanoidModel<?> mb, IModelPlayer imp, ModelPart originalBipedBody, ModelPart originalBipedBodywear, ModelPart originalBipedHead, ModelPart originalBipedHeadwear, ModelPart originalBipedRightArm, ModelPart originalBipedRightArmwear, ModelPart originalBipedLeftArm, ModelPart originalBipedLeftArmwear, ModelPart originalBipedRightLeg, ModelPart originalBipedRightLegwear, ModelPart originalBipedLeftLeg, ModelPart originalBipedLeftLegwear, ModelPart originalBipedCape, ModelPart originalBipedDeadmau5Head)
-	{
+	public SmartRenderModel(boolean b, HumanoidModel<?> mb, IModelPlayer imp, ModelPart originalBipedBody,
+			ModelPart originalBipedBodywear, ModelPart originalBipedHead, ModelPart originalBipedHeadwear,
+			ModelPart originalBipedRightArm, ModelPart originalBipedRightArmwear, ModelPart originalBipedLeftArm,
+			ModelPart originalBipedLeftArmwear, ModelPart originalBipedRightLeg, ModelPart originalBipedRightLegwear,
+			ModelPart originalBipedLeftLeg, ModelPart originalBipedLeftLegwear, ModelPart originalBipedCape,
+			ModelPart originalBipedDeadmau5Head) {
 		this.imp = imp;
 		this.mp = mb;
 
 		isModelPlayer = mp instanceof PlayerModel;
 		smallArms = b;
 
-		// 1.8.9 did mb.boxList.clear() to stop the vanilla model from auto-rendering its own
-		// parts (Smart Render takes over rendering through its own bone hierarchy). HumanoidModel
-		// has no boxList in 1.20.1; vanilla part auto-render is suppressed at the PlayerModel
+		// 1.8.9 did mb.boxList.clear() to stop the vanilla model from auto-rendering
+		// its own
+		// parts (Smart Render takes over rendering through its own bone hierarchy).
+		// HumanoidModel
+		// has no boxList in 1.20.1; vanilla part auto-render is suppressed at the
+		// PlayerModel
 		// renderToBuffer mixin in the render-registration layer instead.
 
 		bipedOuter = create(null);
@@ -93,24 +99,23 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedRightLegwear = create(bipedRightLeg, originalBipedRightLegwear);
 		bipedLeftLegwear = create(bipedLeftLeg, originalBipedLeftLegwear);
 
-		if(originalBipedCape != null)
-		{
+		if (originalBipedCape != null) {
 			bipedCloak = new ModelCapeRenderer(mb, 0, 0, bipedBreast, bipedOuter);
 			copy(bipedCloak, originalBipedCape);
 		}
 
-		if(originalBipedDeadmau5Head != null)
-		{
+		if (originalBipedDeadmau5Head != null) {
 			bipedEars = new ModelEarsRenderer(mb, 24, 0, bipedHead);
 			copy(bipedEars, originalBipedDeadmau5Head);
 		}
 
 		reset(); // set default rotation points
 
-		imp.initialize(bipedBody, bipedBodywear, bipedHead, bipedHeadwear, bipedRightArm, bipedRightArmwear, bipedLeftArm, bipedLeftArmwear, bipedRightLeg, bipedRightLegwear, bipedLeftLeg, bipedLeftLegwear, bipedCloak, bipedEars);
+		imp.initialize(bipedBody, bipedBodywear, bipedHead, bipedHeadwear, bipedRightArm, bipedRightArmwear,
+				bipedLeftArm, bipedLeftArmwear, bipedRightLeg, bipedRightLegwear, bipedLeftLeg, bipedLeftLegwear,
+				bipedCloak, bipedEars);
 
-		if(SmartRenderRender.CurrentMainModel != null)
-		{
+		if (SmartRenderRender.CurrentMainModel != null) {
 			isInventory = SmartRenderRender.CurrentMainModel.isInventory;
 
 			totalVerticalDistance = SmartRenderRender.CurrentMainModel.totalVerticalDistance;
@@ -133,36 +138,39 @@ public class SmartRenderModel extends SmartRenderContext
 		}
 	}
 
-	private ModelRotationRenderer create(ModelRotationRenderer base)
-	{
+	private ModelRotationRenderer create(ModelRotationRenderer base) {
 		return new ModelRotationRenderer(mp, -1, -1, base);
 	}
 
-	private ModelRotationRenderer create(ModelRotationRenderer base, ModelPart original)
-	{
-		if(original == null)
+	private ModelRotationRenderer create(ModelRotationRenderer base, ModelPart original) {
+		if (original == null)
 			return null;
 
-		// 1.8.9 read textureOffsetX/Y off the vanilla ModelRenderer and forwarded them to the
-		// constructor (used to regenerate boxes). In 1.20.1 the geometry is captured directly
-		// from the part's already-built cubes, so the texture offsets are no longer needed.
+		// 1.8.9 read textureOffsetX/Y off the vanilla ModelRenderer and forwarded them
+		// to the
+		// constructor (used to regenerate boxes). In 1.20.1 the geometry is captured
+		// directly
+		// from the part's already-built cubes, so the texture offsets are no longer
+		// needed.
 		ModelRotationRenderer local = new ModelRotationRenderer(mp, -1, -1, base);
 		copy(local, original);
 		return local;
 	}
 
-	private static void copy(ModelRotationRenderer local, ModelPart original)
-	{
-		// 1.8.9 copied childModels + cubeList individually and the mirror/isHidden/showModel
-		// flags. In 1.20.1 the vanilla player parts are flat cube containers, so the part's
+	private static void copy(ModelRotationRenderer local, ModelPart original) {
+		// 1.8.9 copied childModels + cubeList individually and the
+		// mirror/isHidden/showModel
+		// flags. In 1.20.1 the vanilla player parts are flat cube containers, so the
+		// part's
 		// cubes are captured directly and only the visibility flag has an equivalent
-		// (ModelPart.visible). Per-cube mirror is already baked into the captured geometry.
+		// (ModelPart.visible). Per-cube mirror is already baked into the captured
+		// geometry.
 		local.setGeometry(original);
 		local.showModel = original.visible;
 	}
 
-	public void render(Entity entity, float totalHorizontalDistance, float currentHorizontalSpeed, float totalTime, float viewHorizontalAngelOffset, float viewVerticalAngelOffset, float factor)
-	{
+	public void render(Entity entity, float totalHorizontalDistance, float currentHorizontalSpeed, float totalTime,
+			float viewHorizontalAngelOffset, float viewVerticalAngelOffset, float factor) {
 		CurrentPoseStack.pushPose();
 		if (entity.isCrouching())
 			CurrentPoseStack.translate(0.0F, 0.2F, 0.0F);
@@ -170,10 +178,27 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedBody.ignoreRender = bipedHead.ignoreRender = bipedRightArm.ignoreRender = bipedLeftArm.ignoreRender = bipedRightLeg.ignoreRender = bipedLeftLeg.ignoreRender = true;
 		if (isModelPlayer)
 			bipedBodywear.ignoreRender = bipedHeadwear.ignoreRender = bipedRightArmwear.ignoreRender = bipedLeftArmwear.ignoreRender = bipedRightLegwear.ignoreRender = bipedLeftLegwear.ignoreRender = true;
-		imp.superRender(entity, totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		imp.superRender(entity, totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+				viewVerticalAngelOffset, factor);
 		if (isModelPlayer)
 			bipedBodywear.ignoreRender = bipedHeadwear.ignoreRender = bipedRightArmwear.ignoreRender = bipedLeftArmwear.ignoreRender = bipedRightLegwear.ignoreRender = bipedLeftLegwear.ignoreRender = false;
 		bipedBody.ignoreRender = bipedHead.ignoreRender = bipedRightArm.ignoreRender = bipedLeftArm.ignoreRender = bipedRightLeg.ignoreRender = bipedLeftLeg.ignoreRender = false;
+
+		syncVisible(bipedBody, mp.body);
+		syncVisible(bipedHead, mp.head);
+		syncVisible(bipedRightArm, mp.rightArm);
+		syncVisible(bipedLeftArm, mp.leftArm);
+		syncVisible(bipedRightLeg, mp.rightLeg);
+		syncVisible(bipedLeftLeg, mp.leftLeg);
+		if (isModelPlayer) {
+			PlayerModel pm = (PlayerModel) mp;
+			syncVisible(bipedHeadwear, mp.hat);
+			syncVisible(bipedBodywear, pm.jacket);
+			syncVisible(bipedRightArmwear, pm.rightSleeve);
+			syncVisible(bipedLeftArmwear, pm.leftSleeve);
+			syncVisible(bipedRightLegwear, pm.rightPants);
+			syncVisible(bipedLeftLegwear, pm.leftPants);
+		}
 
 		bipedOuter.render(factor);
 
@@ -191,8 +216,7 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedRightLeg.renderIgnoreBase(factor);
 		bipedLeftLeg.renderIgnoreBase(factor);
 
-		if (isModelPlayer)
-		{
+		if (isModelPlayer) {
 			bipedBodywear.renderIgnoreBase(factor);
 			bipedHeadwear.renderIgnoreBase(factor);
 			bipedRightArmwear.renderIgnoreBase(factor);
@@ -204,12 +228,11 @@ public class SmartRenderModel extends SmartRenderContext
 		CurrentPoseStack.popPose();
 	}
 
-	public void setRotationAngles(float totalHorizontalDistance, float currentHorizontalSpeed, float totalTime, float viewHorizontalAngelOffset, float viewVerticalAngelOffset, float factor, Entity entity)
-	{
+	public void setRotationAngles(float totalHorizontalDistance, float currentHorizontalSpeed, float totalTime,
+			float viewHorizontalAngelOffset, float viewVerticalAngelOffset, float factor, Entity entity) {
 		reset();
 
-		if(firstPerson || isInventory)
-		{
+		if (firstPerson || isInventory) {
 			bipedBody.ignoreBase = true;
 			bipedHead.ignoreBase = true;
 			bipedRightArm.ignoreBase = true;
@@ -217,8 +240,7 @@ public class SmartRenderModel extends SmartRenderContext
 			bipedRightLeg.ignoreBase = true;
 			bipedLeftLeg.ignoreBase = true;
 
-			if (isModelPlayer)
-			{
+			if (isModelPlayer) {
 				bipedBodywear.ignoreBase = true;
 				bipedHeadwear.ignoreBase = true;
 				bipedRightArmwear.ignoreBase = true;
@@ -237,8 +259,7 @@ public class SmartRenderModel extends SmartRenderContext
 			bipedRightLeg.forceRender = firstPerson;
 			bipedLeftLeg.forceRender = firstPerson;
 
-			if (isModelPlayer)
-			{
+			if (isModelPlayer) {
 				bipedBodywear.forceRender = firstPerson;
 				bipedHeadwear.forceRender = firstPerson;
 				bipedRightArmwear.forceRender = firstPerson;
@@ -255,12 +276,12 @@ public class SmartRenderModel extends SmartRenderContext
 			bipedRightLeg.setRotationPoint(-2F, 12F, 0.0F);
 			bipedLeftLeg.setRotationPoint(2.0F, 12F, 0.0F);
 
-			imp.superSetRotationAngles(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor, entity);
+			imp.superSetRotationAngles(totalHorizontalDistance, currentHorizontalSpeed, totalTime,
+					viewHorizontalAngelOffset, viewVerticalAngelOffset, factor, entity);
 			return;
 		}
 
-		if(isSleeping)
-		{
+		if (isSleeping) {
 			prevOuterRenderData.rotateAngleX = 0;
 			prevOuterRenderData.rotateAngleY = 0;
 			prevOuterRenderData.rotateAngleZ = 0;
@@ -271,78 +292,84 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedOuter.rotateAngleY = actualRotation / RadiantToAngle;
 		bipedOuter.fadeRotateAngleY = entity.getVehicle() == null;
 
-		imp.animateHeadRotation(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		imp.animateHeadRotation(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+				viewVerticalAngelOffset, factor);
 
-		if(isSleeping)
-			imp.animateSleeping(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		if (isSleeping)
+			imp.animateSleeping(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+					viewVerticalAngelOffset, factor);
 
-		imp.animateArmSwinging(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		imp.animateArmSwinging(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+				viewVerticalAngelOffset, factor);
 
-		if(mp.riding)
-			imp.animateRiding(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		if (mp.riding)
+			imp.animateRiding(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+					viewVerticalAngelOffset, factor);
 
-		if(heldItemPose(mp.leftArmPose) != 0)
-			imp.animateLeftArmItemHolding(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		if (heldItemPose(mp.leftArmPose) != 0)
+			imp.animateLeftArmItemHolding(totalHorizontalDistance, currentHorizontalSpeed, totalTime,
+					viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
 
-		if(heldItemPose(mp.rightArmPose) != 0)
-			imp.animateRightArmItemHolding(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		if (heldItemPose(mp.rightArmPose) != 0)
+			imp.animateRightArmItemHolding(totalHorizontalDistance, currentHorizontalSpeed, totalTime,
+					viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
 
-		if(mp.attackTime > -9990F)
-		{
-			imp.animateWorkingBody(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
-			imp.animateWorkingArms(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		if (mp.attackTime > -9990F) {
+			imp.animateWorkingBody(totalHorizontalDistance, currentHorizontalSpeed, totalTime,
+					viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+			imp.animateWorkingArms(totalHorizontalDistance, currentHorizontalSpeed, totalTime,
+					viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
 		}
 
-		if(mp.crouching)
-			imp.animateSneaking(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		if (mp.crouching)
+			imp.animateSneaking(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+					viewVerticalAngelOffset, factor);
 
-		imp.animateArms(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		imp.animateArms(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+				viewVerticalAngelOffset, factor);
 
-		if(isAimedBow(mp))
-			imp.animateBowAiming(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset, viewVerticalAngelOffset, factor);
+		if (isAimedBow(mp))
+			imp.animateBowAiming(totalHorizontalDistance, currentHorizontalSpeed, totalTime, viewHorizontalAngelOffset,
+					viewVerticalAngelOffset, factor);
 
-		if(bipedOuter.previous != null && !bipedOuter.fadeRotateAngleX)
+		if (bipedOuter.previous != null && !bipedOuter.fadeRotateAngleX)
 			bipedOuter.previous.rotateAngleX = bipedOuter.rotateAngleX;
 
-		if(bipedOuter.previous != null && !bipedOuter.fadeRotateAngleY)
+		if (bipedOuter.previous != null && !bipedOuter.fadeRotateAngleY)
 			bipedOuter.previous.rotateAngleY = bipedOuter.rotateAngleY;
 
 		bipedOuter.fadeIntermediate(totalTime);
 		bipedOuter.fadeStore(totalTime);
 
-		if (isModelPlayer)
-		{
+		if (isModelPlayer) {
 			bipedCloak.ignoreBase = false;
 			bipedCloak.rotateAngleX = Sixtyfourth;
 		}
 	}
 
-	public void animateHeadRotation(float viewHorizontalAngelOffset, float viewVerticalAngelOffset)
-	{
+	public void animateHeadRotation(float viewHorizontalAngelOffset, float viewVerticalAngelOffset) {
 		bipedNeck.ignoreBase = true;
 		bipedHead.rotateAngleY = (actualRotation + viewHorizontalAngelOffset) / RadiantToAngle;
 		bipedHead.rotateAngleX = viewVerticalAngelOffset / RadiantToAngle;
 	}
 
-	public void animateSleeping()
-	{
+	public void animateSleeping() {
 		bipedNeck.ignoreBase = false;
 		bipedHead.rotateAngleY = 0F;
 		bipedHead.rotateAngleX = Eighth;
 		bipedTorso.rotationPointZ = -17F;
 	}
 
-	public void animateArmSwinging(float totalHorizontalDistance, float currentHorizontalSpeed)
-	{
-		bipedRightArm.rotateAngleX = Mth.cos(totalHorizontalDistance * 0.6662F + Half) * 2.0F * currentHorizontalSpeed * 0.5F;
+	public void animateArmSwinging(float totalHorizontalDistance, float currentHorizontalSpeed) {
+		bipedRightArm.rotateAngleX = Mth.cos(totalHorizontalDistance * 0.6662F + Half) * 2.0F * currentHorizontalSpeed
+				* 0.5F;
 		bipedLeftArm.rotateAngleX = Mth.cos(totalHorizontalDistance * 0.6662F) * 2.0F * currentHorizontalSpeed * 0.5F;
 
 		bipedRightLeg.rotateAngleX = Mth.cos(totalHorizontalDistance * 0.6662F) * 1.4F * currentHorizontalSpeed;
 		bipedLeftLeg.rotateAngleX = Mth.cos(totalHorizontalDistance * 0.6662F + Half) * 1.4F * currentHorizontalSpeed;
 	}
 
-	public void animateRiding()
-	{
+	public void animateRiding() {
 		bipedRightArm.rotateAngleX += -0.6283185F;
 		bipedLeftArm.rotateAngleX += -0.6283185F;
 		bipedRightLeg.rotateAngleX = -1.256637F;
@@ -351,29 +378,25 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedLeftLeg.rotateAngleY = -0.3141593F;
 	}
 
-	public void animateLeftArmItemHolding()
-	{
+	public void animateLeftArmItemHolding() {
 		bipedLeftArm.rotateAngleX = bipedLeftArm.rotateAngleX * 0.5F - 0.3141593F * heldItemPose(mp.leftArmPose);
 	}
 
-	public void animateRightArmItemHolding()
-	{
+	public void animateRightArmItemHolding() {
 		int heldItemRight = heldItemPose(mp.rightArmPose);
 		bipedRightArm.rotateAngleX = bipedRightArm.rotateAngleX * 0.5F - 0.3141593F * heldItemRight;
-		if(heldItemRight == 3)
+		if (heldItemRight == 3)
 			bipedRightArm.rotateAngleY = -0.5235988F;
 	}
 
-	public void animateWorkingBody()
-	{
+	public void animateWorkingBody() {
 		float angle = Mth.sin(Mth.sqrt(mp.attackTime) * Whole) * 0.2F;
 		bipedBreast.rotateAngleY = bipedBody.rotateAngleY += angle;
 		bipedBreast.rotationOrder = bipedBody.rotationOrder = ModelRotationRenderer.YXZ;
 		bipedLeftArm.rotateAngleX += angle;
 	}
 
-	public void animateWorkingArms()
-	{
+	public void animateWorkingArms() {
 		float f6 = 1.0F - mp.attackTime;
 		f6 = 1.0F - f6 * f6 * f6;
 		float f7 = Mth.sin(f6 * Half);
@@ -383,8 +406,7 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedRightArm.rotateAngleZ -= Mth.sin(mp.attackTime * Half) * 0.4F;
 	}
 
-	public void animateSneaking()
-	{
+	public void animateSneaking() {
 		bipedTorso.rotateAngleX += 0.5F;
 		bipedRightLeg.rotateAngleX += -0.5F;
 		bipedLeftLeg.rotateAngleX += -0.5F;
@@ -400,16 +422,14 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedNeck.offsetY = 0.0621F;
 	}
 
-	public void animateArms(float totalTime)
-	{
+	public void animateArms(float totalTime) {
 		bipedRightArm.rotateAngleZ += Mth.cos(totalTime * 0.09F) * 0.05F + 0.05F;
 		bipedLeftArm.rotateAngleZ -= Mth.cos(totalTime * 0.09F) * 0.05F + 0.05F;
 		bipedRightArm.rotateAngleX += Mth.sin(totalTime * 0.067F) * 0.05F;
 		bipedLeftArm.rotateAngleX -= Mth.sin(totalTime * 0.067F) * 0.05F;
 	}
 
-	public void animateBowAiming(float totalTime)
-	{
+	public void animateBowAiming(float totalTime) {
 		bipedRightArm.rotateAngleZ = 0.0F;
 		bipedLeftArm.rotateAngleZ = 0.0F;
 		bipedRightArm.rotateAngleY = -0.1F + bipedHead.rotateAngleY - bipedOuter.rotateAngleY;
@@ -422,8 +442,7 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedLeftArm.rotateAngleX -= Mth.sin(totalTime * 0.067F) * 0.05F;
 	}
 
-	public void reset()
-	{
+	public void reset() {
 		bipedOuter.reset();
 		bipedTorso.reset();
 		bipedBody.reset();
@@ -438,8 +457,7 @@ public class SmartRenderModel extends SmartRenderContext
 		bipedRightLeg.reset();
 		bipedLeftLeg.reset();
 
-		if (isModelPlayer)
-		{
+		if (isModelPlayer) {
 			bipedBodywear.reset();
 			bipedHeadwear.reset();
 			bipedRightArmwear.reset();
@@ -461,41 +479,40 @@ public class SmartRenderModel extends SmartRenderContext
 			bipedCloak.setRotationPoint(0.0F, 0.0F, 2.0F);
 	}
 
-	public void renderCloak(float f)
-	{
+	public void renderCloak(float f) {
 		attemptToCallRenderCape = true;
-		if(!disabled)
+		if (!disabled)
 			imp.superRenderCloak(f);
 	}
 
-	// 1.8.9 iterated the vanilla model's boxList (which, after boxList.clear(), held the
-	// Smart Render bones because each ModelRenderer auto-registered itself). Bones no longer
-	// auto-register to a list in 1.20.1, so the equivalent is to iterate our explicit bones.
-	// Returns a vanilla ModelPart (matches Model.getRandomModelPart(RandomSource) in 1.20.1).
-	public ModelPart getRandomBox(RandomSource par1Random)
-	{
+	// 1.8.9 iterated the vanilla model's boxList (which, after boxList.clear(),
+	// held the
+	// Smart Render bones because each ModelRenderer auto-registered itself). Bones
+	// no longer
+	// auto-register to a list in 1.20.1, so the equivalent is to iterate our
+	// explicit bones.
+	// Returns a vanilla ModelPart (matches Model.getRandomModelPart(RandomSource)
+	// in 1.20.1).
+	public ModelPart getRandomBox(RandomSource par1Random) {
 		List<ModelRotationRenderer> boxList = boneList();
 		int size = boxList.size();
 		int renderersWithBoxes = 0;
 
-		for(int i=0; i<size; i++)
-		{
+		for (int i = 0; i < size; i++) {
 			ModelRotationRenderer renderer = boxList.get(i);
-			if(canBeRandomBoxSource(renderer))
+			if (canBeRandomBoxSource(renderer))
 				renderersWithBoxes++;
 		}
 
-		if(renderersWithBoxes != 0)
-		{
+		if (renderersWithBoxes != 0) {
 			int random = par1Random.nextInt(renderersWithBoxes);
 			renderersWithBoxes = -1;
 
-			for(int i=0; i<size; i++)
-			{
+			for (int i = 0; i < size; i++) {
 				ModelRotationRenderer renderer = boxList.get(i);
-				if(canBeRandomBoxSource(renderer))
+				if (canBeRandomBoxSource(renderer))
 					renderersWithBoxes++;
-				if(renderersWithBoxes == random)
+				if (renderersWithBoxes == random)
 					return renderer.part;
 			}
 		}
@@ -503,8 +520,7 @@ public class SmartRenderModel extends SmartRenderContext
 		return null;
 	}
 
-	private List<ModelRotationRenderer> boneList()
-	{
+	private List<ModelRotationRenderer> boneList() {
 		List<ModelRotationRenderer> list = new ArrayList<ModelRotationRenderer>();
 		list.add(bipedOuter);
 		list.add(bipedTorso);
@@ -530,27 +546,31 @@ public class SmartRenderModel extends SmartRenderContext
 		return list;
 	}
 
-	private static boolean canBeRandomBoxSource(ModelRotationRenderer renderer)
-	{
-		return renderer != null && renderer.part != null && !((net.smart.render.mixin.ModelPartAccessor)(Object)renderer.part).smartrender$getCubes().isEmpty() && renderer.canBeRandomBoxSource();
+	private static boolean canBeRandomBoxSource(ModelRotationRenderer renderer) {
+		return renderer != null && renderer.part != null
+				&& !((net.smart.render.mixin.ModelPartAccessor) (Object) renderer.part).smartrender$getCubes().isEmpty()
+				&& renderer.canBeRandomBoxSource();
 	}
 
-	// 1.8.9 -> 1.20.1: ModelBiped.heldItemLeft/heldItemRight were ints (0 = empty hand,
-	// 1 = item, 3 = block-like). 1.20.1 replaced them with the HumanoidModel.ArmPose enum, so
-	// map back to the legacy ints the animate*ItemHolding hooks were written against.
-	// NOTE[arm-pose-int]: only EMPTY/BLOCK/other are distinguished; faithful 1.20.1 mapping -- revisit if finer pose needed.
-	private static int heldItemPose(HumanoidModel.ArmPose pose)
-	{
-		if(pose == null || pose == HumanoidModel.ArmPose.EMPTY)
+	// 1.8.9 -> 1.20.1: ModelBiped.heldItemLeft/heldItemRight were ints (0 = empty
+	// hand,
+	// 1 = item, 3 = block-like). 1.20.1 replaced them with the
+	// HumanoidModel.ArmPose enum, so
+	// map back to the legacy ints the animate*ItemHolding hooks were written
+	// against.
+	// NOTE[arm-pose-int]: only EMPTY/BLOCK/other are distinguished; faithful 1.20.1
+	// mapping -- revisit if finer pose needed.
+	private static int heldItemPose(HumanoidModel.ArmPose pose) {
+		if (pose == null || pose == HumanoidModel.ArmPose.EMPTY)
 			return 0;
-		if(pose == HumanoidModel.ArmPose.BLOCK)
+		if (pose == HumanoidModel.ArmPose.BLOCK)
 			return 3;
 		return 1;
 	}
 
-	private static boolean isAimedBow(HumanoidModel<?> mp)
-	{
-		return mp.rightArmPose == HumanoidModel.ArmPose.BOW_AND_ARROW || mp.leftArmPose == HumanoidModel.ArmPose.BOW_AND_ARROW;
+	private static boolean isAimedBow(HumanoidModel<?> mp) {
+		return mp.rightArmPose == HumanoidModel.ArmPose.BOW_AND_ARROW
+				|| mp.leftArmPose == HumanoidModel.ArmPose.BOW_AND_ARROW;
 	}
 
 	public boolean isInventory;
@@ -598,10 +618,14 @@ public class SmartRenderModel extends SmartRenderContext
 	public ModelEarsRenderer bipedEars;
 	public ModelCapeRenderer bipedCloak;
 
-
 	public boolean disabled;
 	public boolean attemptToCallRenderCape;
 	public RendererData prevOuterRenderData;
 	public boolean isSleeping;
 	public boolean firstPerson;
+
+	private static void syncVisible(ModelRotationRenderer bone, ModelPart source) {
+		if (bone != null && source != null)
+			bone.showModel = source.visible;
+	}
 }

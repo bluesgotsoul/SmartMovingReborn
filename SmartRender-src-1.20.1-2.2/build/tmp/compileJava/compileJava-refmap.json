@@ -1,5 +1,8 @@
 {
   "mappings": {
+    "net/smart/render/mixin/HumanoidArmorLayerMixin": {
+      "render": "Lnet/minecraft/client/renderer/entity/layers/HumanoidArmorLayer;m_6494_(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V"
+    },
     "net/smart/render/mixin/LivingEntityRendererMixin": {
       "getBob": "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;m_6930_(Lnet/minecraft/world/entity/LivingEntity;F)F"
     },
@@ -15,8 +18,15 @@
       "layers": "f_115291_:Ljava/util/List;",
       "model": "f_115290_:Lnet/minecraft/client/model/EntityModel;"
     },
+    "net/smart/render/mixin/ItemInHandLayerMixin": {
+      "Lnet/minecraft/client/model/ArmedModel;translateToHand(Lnet/minecraft/world/entity/HumanoidArm;Lcom/mojang/blaze3d/vertex/PoseStack;)V": "Lnet/minecraft/client/model/ArmedModel;m_6002_(Lnet/minecraft/world/entity/HumanoidArm;Lcom/mojang/blaze3d/vertex/PoseStack;)V",
+      "renderArmWithItem": "Lnet/minecraft/client/renderer/entity/layers/ItemInHandLayer;m_117184_(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lnet/minecraft/world/entity/HumanoidArm;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
+    },
     "net/smart/render/mixin/CapeLayerMixin": {
       "render": "Lnet/minecraft/client/renderer/entity/layers/CapeLayer;m_6494_(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V"
+    },
+    "net/smart/render/mixin/InventoryScreenMixin": {
+      "renderEntityInInventoryFollowsMouse": "Lnet/minecraft/client/gui/screens/inventory/InventoryScreen;m_274545_(Lnet/minecraft/client/gui/GuiGraphics;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"
     },
     "net/smart/render/mixin/PlayerModelAccessor": {
       "cloak": "f_103373_:Lnet/minecraft/client/model/geom/ModelPart;",
@@ -38,6 +48,9 @@
   },
   "data": {
     "searge": {
+      "net/smart/render/mixin/HumanoidArmorLayerMixin": {
+        "render": "Lnet/minecraft/client/renderer/entity/layers/HumanoidArmorLayer;m_6494_(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V"
+      },
       "net/smart/render/mixin/LivingEntityRendererMixin": {
         "getBob": "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;m_6930_(Lnet/minecraft/world/entity/LivingEntity;F)F"
       },
@@ -53,8 +66,15 @@
         "layers": "f_115291_:Ljava/util/List;",
         "model": "f_115290_:Lnet/minecraft/client/model/EntityModel;"
       },
+      "net/smart/render/mixin/ItemInHandLayerMixin": {
+        "Lnet/minecraft/client/model/ArmedModel;translateToHand(Lnet/minecraft/world/entity/HumanoidArm;Lcom/mojang/blaze3d/vertex/PoseStack;)V": "Lnet/minecraft/client/model/ArmedModel;m_6002_(Lnet/minecraft/world/entity/HumanoidArm;Lcom/mojang/blaze3d/vertex/PoseStack;)V",
+        "renderArmWithItem": "Lnet/minecraft/client/renderer/entity/layers/ItemInHandLayer;m_117184_(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lnet/minecraft/world/entity/HumanoidArm;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
+      },
       "net/smart/render/mixin/CapeLayerMixin": {
         "render": "Lnet/minecraft/client/renderer/entity/layers/CapeLayer;m_6494_(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V"
+      },
+      "net/smart/render/mixin/InventoryScreenMixin": {
+        "renderEntityInInventoryFollowsMouse": "Lnet/minecraft/client/gui/screens/inventory/InventoryScreen;m_274545_(Lnet/minecraft/client/gui/GuiGraphics;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"
       },
       "net/smart/render/mixin/PlayerModelAccessor": {
         "cloak": "f_103373_:Lnet/minecraft/client/model/geom/ModelPart;",

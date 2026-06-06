@@ -10,7 +10,6 @@ clientSideOnly=true
 modId="smartrender"
 version="2.2"
 displayName="Example Mod"
-logoFile="icon.png"
 displayURL="http://www.minecraftforum.net/topic/361430-"
 authors="YourNameHere, OtherNameHere"
 description='''Example mod description.
