@@ -28,6 +28,7 @@
       "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/world/entity/Entity;m_6478_(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V"
     },
     "net/smart/moving/mixin/PlayerMixin": {
+      "getDimensions": "Lnet/minecraft/world/entity/player/Player;m_6972_(Lnet/minecraft/world/entity/Pose;)Lnet/minecraft/world/entity/EntityDimensions;",
       "aiStep()V": "Lnet/minecraft/world/entity/player/Player;m_8107_()V",
       "causeFoodExhaustion(F)V": "Lnet/minecraft/world/entity/player/Player;m_36399_(F)V",
       "updateSwimming()V": "Lnet/minecraft/world/entity/player/Player;m_5844_()V",
@@ -55,7 +56,8 @@
       "setPos(DDD)V": "Lnet/minecraft/world/entity/Entity;m_6034_(DDD)V"
     },
     "net/smart/moving/mixin/LivingEntityClientTravelMixin": {
-      "travel(Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/world/entity/LivingEntity;m_7023_(Lnet/minecraft/world/phys/Vec3;)V"
+      "travel(Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/world/entity/LivingEntity;m_7023_(Lnet/minecraft/world/phys/Vec3;)V",
+      "aiStep()V": "Lnet/minecraft/world/entity/LivingEntity;m_8107_()V"
     },
     "net/smart/moving/mixin/ServerPlayerGameModeUseMixin": {
       "useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;": "Lnet/minecraft/server/level/ServerPlayerGameMode;m_7179_(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;"
@@ -109,6 +111,7 @@
         "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/world/entity/Entity;m_6478_(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V"
       },
       "net/smart/moving/mixin/PlayerMixin": {
+        "getDimensions": "Lnet/minecraft/world/entity/player/Player;m_6972_(Lnet/minecraft/world/entity/Pose;)Lnet/minecraft/world/entity/EntityDimensions;",
         "aiStep()V": "Lnet/minecraft/world/entity/player/Player;m_8107_()V",
         "causeFoodExhaustion(F)V": "Lnet/minecraft/world/entity/player/Player;m_36399_(F)V",
         "updateSwimming()V": "Lnet/minecraft/world/entity/player/Player;m_5844_()V",
@@ -136,7 +139,8 @@
         "setPos(DDD)V": "Lnet/minecraft/world/entity/Entity;m_6034_(DDD)V"
       },
       "net/smart/moving/mixin/LivingEntityClientTravelMixin": {
-        "travel(Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/world/entity/LivingEntity;m_7023_(Lnet/minecraft/world/phys/Vec3;)V"
+        "travel(Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/world/entity/LivingEntity;m_7023_(Lnet/minecraft/world/phys/Vec3;)V",
+        "aiStep()V": "Lnet/minecraft/world/entity/LivingEntity;m_8107_()V"
       },
       "net/smart/moving/mixin/ServerPlayerGameModeUseMixin": {
         "useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;": "Lnet/minecraft/server/level/ServerPlayerGameMode;m_7179_(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;"

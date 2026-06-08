@@ -19,6 +19,8 @@ package net.smart.moving.config;
 
 import java.io.*;
 
+import org.lwjgl.glfw.GLFW;
+
 // 1.8.9 -> 1.20.1 import adaptation:
 //   KeyBinding                -> net.minecraft.client.KeyMapping
 //   Minecraft.getMinecraft()  -> Minecraft.getInstance()
@@ -35,116 +37,157 @@ import net.minecraft.network.chat.Component;
 import net.smart.moving.*;
 import net.smart.properties.*;
 
-public class SmartMovingOptions extends SmartMovingClientConfig
-{
-	public final Property<Boolean> _localUserHasChangeConfigRight = Unmodified("move.global.config.right.local.user").comment("Whether the current local user has the right to change the global configuration in-game (despite of the names listed in \"move.global.config.right.user.names\"").section();
-	public final Property<Boolean> _localUserHasChangeSpeedRight = Unmodified("move.global.speed.right.local.user").comment("Whether the current local user has the right to change the global speed in-game (despite of the names listed in \"move.global.config.right.user.names\"");
+public class SmartMovingOptions extends SmartMovingClientConfig {
+	public final Property<Boolean> _localUserHasChangeConfigRight = Unmodified("move.global.config.right.local.user")
+			.comment(
+					"Whether the current local user has the right to change the global configuration in-game (despite of the names listed in \"move.global.config.right.user.names\"")
+			.section();
+	public final Property<Boolean> _localUserHasChangeSpeedRight = Unmodified("move.global.speed.right.local.user")
+			.comment(
+					"Whether the current local user has the right to change the global speed in-game (despite of the names listed in \"move.global.config.right.user.names\"");
 
+	public final Property<Float> _perspectiveFadeFactor = PositiveFactor("move.perspective.fade.factor")
+			.values(0.5F, 0.1F, 1F)
+			.comment("Fading speed factor between the different perspectives (>= 0.1, <= 1, set to '1' to switch off)")
+			.book("Viewpoint perspective", "Below you find the options to manipulate the viewpoint perspective");
+	public final Property<Float> _perspectiveRunFactor = Float("move.perspective.run.factor")
+			.key("move.run.perspective.factor", _pre_sm_2_1).defaults(1F)
+			.comment("Standard sprinting perspective (set to '0' to switch off)");
+	public final Property<Float> _perspectiveSprintFactor = Float("move.perspective.sprint.factor")
+			.key("move.sprint.perspective.factor", _pre_sm_2_1).defaults(1.5F)
+			.comment("Smart on ground sprinting perspective (set to '0' to switch off)");
 
+	public final Property<Float> _angleJumpDoubleClickTicks = Positive("move.jump.angle.double.click.ticks").singular()
+			.up(3F, 2F).comment("The maximum number of ticks between two clicks to trigger a side or back jump (>= 2)")
+			.book("User interface", "Below you find the options to manipulate Smart Moving's user interface");
 
-	public final Property<Float> _perspectiveFadeFactor = PositiveFactor("move.perspective.fade.factor").values(0.5F, 0.1F, 1F).comment("Fading speed factor between the different perspectives (>= 0.1, <= 1, set to '1' to switch off)").book("Viewpoint perspective", "Below you find the options to manipulate the viewpoint perspective");
-	public final Property<Float> _perspectiveRunFactor = Float("move.perspective.run.factor").key("move.run.perspective.factor", _pre_sm_2_1).defaults(1F).comment("Standard sprinting perspective (set to '0' to switch off)");
-	public final Property<Float> _perspectiveSprintFactor = Float("move.perspective.sprint.factor").key("move.sprint.perspective.factor", _pre_sm_2_1).defaults(1.5F).comment("Smart on ground sprinting perspective (set to '0' to switch off)");
+	public final Property<Boolean> _wallJumpDoubleClick = Unmodified("move.jump.wall.double.click").singular().comment(
+			"Whether wall jumping should be triggered by single or double clicking (and then press and holding) the jump button")
+			.section();
+	public final Property<Float> _wallJumpDoubleClickTicks = Positive("move.jump.wall.double.click.ticks").singular()
+			.up(3F, 2F).comment(
+					"The maximum number of ticks between two clicks to trigger a wall jump (>= 2, depends on \"move.jump.wall.double.click\")");
 
+	public final Property<Boolean> _climbJumpBackHeadOnGrab = Unmodified("move.jump.climb.back.head.on.grab").singular()
+			.comment("Whether pressing or not pressing the grab button while climb jumping back results in a head jump")
+			.section();
 
+	public final Property<Boolean> _displayExhaustionBar = Unmodified("move.gui.exhaustion.bar").singular()
+			.comment("Whether to display the exhaustion bar in the game overlay").section();
+	public final Property<Boolean> _displayJumpChargeBar = Unmodified("move.gui.jump.charge.bar").singular()
+			.comment("Whether to display the jump charge bar in the game overlay");
 
-	public final Property<Float> _angleJumpDoubleClickTicks = Positive("move.jump.angle.double.click.ticks").singular().up(3F, 2F).comment("The maximum number of ticks between two clicks to trigger a side or back jump (>= 2)").book("User interface", "Below you find the options to manipulate Smart Moving's user interface");
+	public final Property<Boolean> _sneakToggle = Modified("move.sneak.toggle")
+			.comment("To switch on/off sneak toggling").section();
+	public final Property<Boolean> _crawlToggle = Modified("move.crawl.toggle")
+			.comment("To switch on/off crawl toggling");
 
-	public final Property<Boolean> _wallJumpDoubleClick = Unmodified("move.jump.wall.double.click").singular().comment("Whether wall jumping should be triggered by single or double clicking (and then press and holding) the jump button").section();
-	public final Property<Float> _wallJumpDoubleClickTicks = Positive("move.jump.wall.double.click.ticks").singular().up(3F, 2F).comment("The maximum number of ticks between two clicks to trigger a wall jump (>= 2, depends on \"move.jump.wall.double.click\")");
+	public final Property<Boolean> _flyCloseToGround = Modified("move.fly.ground.close")
+			.comment("To switch on/off flying close to the ground").section();
+	public final Property<Boolean> _flyWhileOnGround = Modified("move.fly.ground.collide").depends(_flyCloseToGround)
+			.comment(
+					"To switch on/off flying while colliding with the grond (Relevant only if \"move.fly.ground.close\" is true)");
 
-	public final Property<Boolean> _climbJumpBackHeadOnGrab = Unmodified("move.jump.climb.back.head.on.grab").singular().comment("Whether pressing or not pressing the grab button while climb jumping back results in a head jump").section();
+	public final Property<Boolean> _flyControlVertical = Unmodified("move.fly.control.vertical")
+			.comment("Whether flying control also depends on where the player looks vertically.").section();
+	public final Property<Boolean> _diveControlVertical = Unmodified("move.dive.control.vertical")
+			.comment("Whether diving control also depends on where the player looks vertically.");
 
-	public final Property<Boolean> _displayExhaustionBar = Unmodified("move.gui.exhaustion.bar").singular().comment("Whether to display the exhaustion bar in the game overlay").section();
-	public final Property<Boolean> _displayJumpChargeBar = Unmodified("move.gui.jump.charge.bar").singular().comment("Whether to display the jump charge bar in the game overlay");
-
-	public final Property<Boolean> _sneakToggle = Modified("move.sneak.toggle").comment("To switch on/off sneak toggling").section();
-	public final Property<Boolean> _crawlToggle = Modified("move.crawl.toggle").comment("To switch on/off crawl toggling");
-
-	public final Property<Boolean> _flyCloseToGround = Modified("move.fly.ground.close").comment("To switch on/off flying close to the ground").section();
-	public final Property<Boolean> _flyWhileOnGround = Modified("move.fly.ground.collide").depends(_flyCloseToGround).comment("To switch on/off flying while colliding with the grond (Relevant only if \"move.fly.ground.close\" is true)");
-
-	public final Property<Boolean> _flyControlVertical = Unmodified("move.fly.control.vertical").comment("Whether flying control also depends on where the player looks vertically.").section();
-	public final Property<Boolean> _diveControlVertical = Unmodified("move.dive.control.vertical").comment("Whether diving control also depends on where the player looks vertically.");
-
-	private final Property<Integer> _old_toggleKeyCode = Integer("move.toggle.key", _pre_sm_1_7).singular().defaults(67);
-	private final Property<String> _defaultConfigToggleKeyName = String("move.config.toggle.default.key.name").key("move.toggle.key.name", _pre_sm_3_2).singular().defaults("F9").source(_old_toggleKeyCode.toKeyName(), _pre_sm_1_7).singular().comment("Key name to toggle Smart Moving features in-game (default: \"F9\")").section();
-	private final Property<String> _defaultGrabKeyName = String("move.grab.default.key.name").singular().defaults("LCONTROL").singular().comment("Default key name to \"grab\" (default: \"LCONTROL\")");
-	private final Property<String> _speedIncreaseKeyName = String("move.speed.increase.default.key.name").key("move.speed.increase.key.name", _pre_sm_3_2).singular().defaults("O").singular().comment("Key name to increase the moving speed ingame (default: \"O\")");
-	private final Property<String> _speedDecreaseKeyName = String("move.speed.decrease.default.key.name").key("move.speed.decrease.key.name", _pre_sm_3_2).singular().defaults("I").singular().comment("Key name to decrease the moving speed ingame (default: \"I\")");
+	private final Property<Integer> _old_toggleKeyCode = Integer("move.toggle.key", _pre_sm_1_7).singular()
+			.defaults(67);
+	private final Property<String> _defaultConfigToggleKeyName = String("move.config.toggle.default.key.name")
+			.key("move.toggle.key.name", _pre_sm_3_2).singular().defaults("F9")
+			.source(_old_toggleKeyCode.toKeyName(), _pre_sm_1_7).singular()
+			.comment("Key name to toggle Smart Moving features in-game (default: \"F9\")").section();
+	private final Property<String> _defaultGrabKeyName = String("move.grab.default.key.name").singular()
+			.defaults("LCONTROL").singular().comment("Default key name to \"grab\" (default: \"LCONTROL\")");
+	private final Property<String> _speedIncreaseKeyName = String("move.speed.increase.default.key.name")
+			.key("move.speed.increase.key.name", _pre_sm_3_2).singular().defaults("O").singular()
+			.comment("Key name to increase the moving speed ingame (default: \"O\")");
+	private final Property<String> _speedDecreaseKeyName = String("move.speed.decrease.default.key.name")
+			.key("move.speed.decrease.key.name", _pre_sm_3_2).singular().defaults("I").singular()
+			.comment("Key name to decrease the moving speed ingame (default: \"I\")");
 
 	public final Property<Integer> _defaultConfigToggleKeyCode = _defaultConfigToggleKeyName.toKeyCode(67);
 	public final Property<Integer> _defaultGrabKeyCode = _defaultGrabKeyName.toKeyCode(29);
 	public final Property<Integer> _defaultSpeedIncreaseKeyCode = _speedIncreaseKeyName.toKeyCode(24);
 	public final Property<Integer> _defaultSpeedDecreaseKeyCode = _speedDecreaseKeyName.toKeyCode(23);
 
+	public final Property<Boolean> _configChat = Unmodified("move.config.chat").singular()
+			.comment("To switch on/off option status messages via chat system").book("Message Management",
+					"Below you find the options to define in which case Smart Moving should write messages about its current behavior to the ingame chat");
+	public final Property<Boolean> _configChatInit = Unmodified("move.config.chat.init").depends(_configChat).singular()
+			.comment(
+					"To switch on/off the initial option status message when starting a game (Relevant only if \"move.config.chat\" is not false)");
+	public final Property<Boolean> _configChatInitHelp = Unmodified("move.config.chat.init.help")
+			.depends(_configChatInit).singular().comment(
+					"To switch on/off the initial option help message (Relevant only if \"move.config.chat.init\" is not false and no improved keybinding GUI (Minecraft Forge or the Macros/Keybind mod) is installed)");
+	public final Property<Boolean> _configChatServer = Unmodified("move.config.chat.server").depends(_configChat)
+			.singular().comment(
+					"To switch on/off the server config overridden status message when joining a multiplayer game (Relevant only if \"move.config.chat\" is not false)");
 
-
-	public final Property<Boolean> _configChat = Unmodified("move.config.chat").singular().comment("To switch on/off option status messages via chat system").book("Message Management", "Below you find the options to define in which case Smart Moving should write messages about its current behavior to the ingame chat");
-	public final Property<Boolean> _configChatInit = Unmodified("move.config.chat.init").depends(_configChat).singular().comment("To switch on/off the initial option status message when starting a game (Relevant only if \"move.config.chat\" is not false)");
-	public final Property<Boolean> _configChatInitHelp = Unmodified("move.config.chat.init.help").depends(_configChatInit).singular().comment("To switch on/off the initial option help message (Relevant only if \"move.config.chat.init\" is not false and no improved keybinding GUI (Minecraft Forge or the Macros/Keybind mod) is installed)");
-	public final Property<Boolean> _configChatServer = Unmodified("move.config.chat.server").depends(_configChat).singular().comment("To switch on/off the server config overridden status message when joining a multiplayer game (Relevant only if \"move.config.chat\" is not false)");
-
-	public final Property<Boolean> _speedChat = Unmodified("move.speed.chat").singular().comment("To switch on/off speed messages via chat system").section();
-	public final Property<Boolean> _speedChatInit = Unmodified("move.speed.chat.init").depends(_speedChat).singular().comment("To switch on/off the intial speed message when starting a game (Relevant only if \"move.speed.chat\" is not false)");
-	public final Property<Boolean> _speedChatInitHelp = Unmodified("move.speed.chat.init.help").depends(_speedChatInit).singular().comment("To switch on/off the initial speed help message (Relevant only if \"move.speed.chat.init\" is not false and no improved keybinding GUI (Minecraft Forge or the Macros/Keybind mod) is installed))");
-	public final Property<Boolean> _speedChatServer = Unmodified("move.config.chat.server").depends(_speedChat).singular().comment("To switch on/off the server speed change message when joining a multiplayer game (Relevant only if \"move.speed.chat\" is not false)");
-
+	public final Property<Boolean> _speedChat = Unmodified("move.speed.chat").singular()
+			.comment("To switch on/off speed messages via chat system").section();
+	public final Property<Boolean> _speedChatInit = Unmodified("move.speed.chat.init").depends(_speedChat).singular()
+			.comment(
+					"To switch on/off the intial speed message when starting a game (Relevant only if \"move.speed.chat\" is not false)");
+	public final Property<Boolean> _speedChatInitHelp = Unmodified("move.speed.chat.init.help").depends(_speedChatInit)
+			.singular().comment(
+					"To switch on/off the initial speed help message (Relevant only if \"move.speed.chat.init\" is not false and no improved keybinding GUI (Minecraft Forge or the Macros/Keybind mod) is installed))");
+	public final Property<Boolean> _speedChatServer = Unmodified("move.config.chat.server").depends(_speedChat)
+			.singular().comment(
+					"To switch on/off the server speed change message when joining a multiplayer game (Relevant only if \"move.speed.chat\" is not false)");
 
 	// 1.8.9 used net.minecraft.client.settings.KeyBinding; 1.20.1 uses KeyMapping.
 	// NOTE: in 1.8.9 these were registered in SmartMovingContext.initialize() via
-	// ClientRegistry.registerKeyBinding(...). In 1.20.1 key mappings must be registered
+	// ClientRegistry.registerKeyBinding(...). In 1.20.1 key mappings must be
+	// registered
 	// through RegisterKeyMappingsEvent; that wiring lives in the client layer
-	// (SmartMovingClient) - NOTE[input-layer]: registered via RegisterKeyMappingsEvent in SmartMovingClient.onRegisterKeyMappings().
+	// (SmartMovingClient) - NOTE[input-layer]: registered via
+	// RegisterKeyMappingsEvent in SmartMovingClient.onRegisterKeyMappings().
 	public KeyMapping keyBindGrab;
 	public KeyMapping keyBindConfigToggle;
 	public KeyMapping keyBindSpeedIncrease;
 	public KeyMapping keyBindSpeedDecrease;
 
-	// 1.8.9: Minecraft.getMinecraft().mcDataDir -> 1.20.1: net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().toFile()
+	// 1.8.9: Minecraft.getMinecraft().mcDataDir -> 1.20.1:
+	// net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().toFile()
 	public static final File optionsPath = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().toFile();
 
-	public SmartMovingOptions()
-	{
+	public SmartMovingOptions() {
 		loadFromOptionsFile(optionsPath);
 		saveToOptionsFile(optionsPath);
 
-		keyBindGrab = new KeyMapping("key.climb", _defaultGrabKeyCode.value, "key.categories.gameplay");
-		keyBindConfigToggle = new KeyMapping("key.config.toggle", _defaultConfigToggleKeyCode.value, "key.categories.smartmoving");
-		keyBindSpeedIncrease = new KeyMapping("key.speed.increase", _defaultSpeedIncreaseKeyCode.value, "key.categories.smartmoving");
-		keyBindSpeedDecrease = new KeyMapping("key.speed.decrease", _defaultSpeedDecreaseKeyCode.value, "key.categories.smartmoving");
+		keyBindGrab = new KeyMapping("key.climb", GLFW.GLFW_KEY_LEFT_CONTROL, "key.categories.gameplay");
+		keyBindConfigToggle = new KeyMapping("key.config.toggle", GLFW.GLFW_KEY_F9, "key.categories.smartmoving");
+		keyBindSpeedIncrease = new KeyMapping("key.speed.increase", GLFW.GLFW_KEY_O, "key.categories.smartmoving");
+		keyBindSpeedDecrease = new KeyMapping("key.speed.decrease", GLFW.GLFW_KEY_I, "key.categories.smartmoving");
 	}
 
-	public boolean isSneakToggleEnabled()
-	{
+	public boolean isSneakToggleEnabled() {
 		return _sneakToggle.value && enabled;
 	}
 
-	public boolean isCrawlToggleEnabled()
-	{
+	public boolean isCrawlToggleEnabled() {
 		return _crawlToggle.value && enabled;
 	}
 
-	public int angleJumpDoubleClickTicks()
-	{
-		return (int)Math.ceil(_angleJumpDoubleClickTicks.value);
+	public int angleJumpDoubleClickTicks() {
+		return (int) Math.ceil(_angleJumpDoubleClickTicks.value);
 	}
 
-	public int wallJumpDoubleClickTicks()
-	{
-		return (int)Math.ceil(_wallJumpDoubleClickTicks.value);
+	public int wallJumpDoubleClickTicks() {
+		return (int) Math.ceil(_wallJumpDoubleClickTicks.value);
 	}
 
 	@Override
-	public void toggle()
-	{
+	public void toggle() {
 		super.toggle();
-		if(_configChat.value)
+		if (_configChat.value)
 			writeClientConfigMessageToChat(false);
 
 		Property<String> defaultKey = null;
-		switch(gameType)
-		{
+		switch (gameType) {
 			default:
 			case Survival:
 				defaultKey = _survivalDefaultConfigKey;
@@ -157,8 +200,7 @@ public class SmartMovingOptions extends SmartMovingClientConfig
 				break;
 		}
 
-		if(defaultKey != null)
-		{
+		if (defaultKey != null) {
 			String currentKey = getCurrentKey();
 			defaultKey.setValue(currentKey);
 			saveToOptionsFile(optionsPath);
@@ -166,38 +208,34 @@ public class SmartMovingOptions extends SmartMovingClientConfig
 	}
 
 	@Override
-	public void changeSpeed(int difference)
-	{
+	public void changeSpeed(int difference) {
 		super.changeSpeed(difference);
 		writeClientSpeedMessageToChat(false);
 		saveToOptionsFile(optionsPath);
 	}
 
-	private void writeClientConfigMessageToChat(boolean everyone)
-	{
+	private void writeClientConfigMessageToChat(boolean everyone) {
 		String prefix = getClientEveryonePrefix("move.config.chat.client", everyone);
-		if(SmartMovingContext.Config.enabled)
-		{
+		if (SmartMovingContext.Config.enabled) {
 			String name = SmartMovingContext.Config._configKeyName.value;
-			if(name.isEmpty())
+			if (name.isEmpty())
 				name = null;
 
 			boolean unnamed = name == null;
-			if(unnamed)
+			if (unnamed)
 				name = getCurrentKey();
 
-			if(name == SmartMovingProperties.Enabled || (unnamed && getKeyCount() == 1))
+			if (name == SmartMovingProperties.Enabled || (unnamed && getKeyCount() == 1))
 				writeToChat(prefix + "enabled", SmartMovingInfo.ConfigChatId);
 			else
-				writeToChat(prefix + (unnamed ? "unnamed" : "named"), SmartMovingInfo.ConfigChatId, new Object[] { name });
-		}
-		else
+				writeToChat(prefix + (unnamed ? "unnamed" : "named"), SmartMovingInfo.ConfigChatId,
+						new Object[] { name });
+		} else
 			writeToChat(prefix + "disabled", SmartMovingInfo.ConfigChatId);
 	}
 
-	public void writeClientSpeedMessageToChat(boolean everyone)
-	{
-		if(!_speedChat.value)
+	public void writeClientSpeedMessageToChat(boolean everyone) {
+		if (!_speedChat.value)
 			return;
 
 		Object percent = SmartMovingContext.Config.getSpeedPercent();
@@ -206,125 +244,117 @@ public class SmartMovingOptions extends SmartMovingClientConfig
 		writeToChat(key, SmartMovingInfo.SpeedChatId, percent);
 	}
 
-	private static String getClientEveryonePrefix(String base, boolean everyone)
-	{
+	private static String getClientEveryonePrefix(String base, boolean everyone) {
 		String result = base + ".";
-		if(everyone)
+		if (everyone)
 			result += "everyone.";
 		return result;
 	}
 
-	public void writeServerConfigMessageToChat()
-	{
-		if(!_configChatServer.value)
+	public void writeServerConfigMessageToChat() {
+		if (!_configChatServer.value)
 			return;
 
-		if(SmartMovingContext.Config.enabled)
-		{
+		if (SmartMovingContext.Config.enabled) {
 			String configName = SmartMovingContext.Config._configKeyName.value;
-			if(configName != null && !configName.isEmpty())
+			if (configName != null && !configName.isEmpty())
 				writeToChat("move.config.chat.server.global.named", SmartMovingInfo.DefaultChatId, configName);
 			else
 				writeToChat("move.config.chat.server.global.unnamed", SmartMovingInfo.DefaultChatId);
-		}
-		else
+		} else
 			writeToChat("move.config.chat.server.disable", SmartMovingInfo.DefaultChatId);
 	}
 
-	public void writeServerReconfigMessageToChat(boolean wasEnabled, String username, boolean everyone)
-	{
-		if(Minecraft.getInstance().player.getGameProfile().getName().equals(username))
+	public void writeServerReconfigMessageToChat(boolean wasEnabled, String username, boolean everyone) {
+		if (Minecraft.getInstance().player.getGameProfile().getName().equals(username))
 			writeClientConfigMessageToChat(everyone);
-		else if(_configChatServer.value)
-		{
-			if(SmartMovingContext.Config.enabled)
-			{
+		else if (_configChatServer.value) {
+			if (SmartMovingContext.Config.enabled) {
 				String configname = SmartMovingContext.Config._configKeyName.value;
 				boolean hasConfigName = configname != null && !configname.isEmpty();
-				if(wasEnabled)
-					if(hasConfigName)
-						if(username != null)
-							writeToChat("move.config.chat.server.update.named.user", SmartMovingInfo.ConfigChatId, configname, username);
+				if (wasEnabled)
+					if (hasConfigName)
+						if (username != null)
+							writeToChat("move.config.chat.server.update.named.user", SmartMovingInfo.ConfigChatId,
+									configname, username);
 						else
-							writeToChat("move.config.chat.server.update.named", SmartMovingInfo.ConfigChatId, configname);
+							writeToChat("move.config.chat.server.update.named", SmartMovingInfo.ConfigChatId,
+									configname);
+					else if (username != null)
+						writeToChat("move.config.chat.server.update.unnamed.user", SmartMovingInfo.ConfigChatId,
+								username);
 					else
-						if(username != null)
-							writeToChat("move.config.chat.server.update.unnamed.user", SmartMovingInfo.ConfigChatId, username);
-						else
-							writeToChat("move.config.chat.server.update.unnamed", SmartMovingInfo.ConfigChatId);
+						writeToChat("move.config.chat.server.update.unnamed", SmartMovingInfo.ConfigChatId);
+				else if (hasConfigName)
+					if (username != null)
+						writeToChat("move.config.chat.server.update.named.user", SmartMovingInfo.ConfigChatId,
+								configname, username);
+					else
+						writeToChat("move.config.chat.server.update.named", SmartMovingInfo.ConfigChatId, configname);
+				else if (username != null)
+					writeToChat("move.config.chat.server.enable.user", SmartMovingInfo.ConfigChatId, username);
 				else
-					if(hasConfigName)
-						if(username != null)
-							writeToChat("move.config.chat.server.update.named.user", SmartMovingInfo.ConfigChatId, configname, username);
-						else
-							writeToChat("move.config.chat.server.update.named", SmartMovingInfo.ConfigChatId, configname);
-					else
-						if(username != null)
-							writeToChat("move.config.chat.server.enable.user", SmartMovingInfo.ConfigChatId, username);
-						else
-							writeToChat("move.config.chat.server.enable", SmartMovingInfo.ConfigChatId);
-			}
-			else if(wasEnabled)
-				if(username != null)
+					writeToChat("move.config.chat.server.enable", SmartMovingInfo.ConfigChatId);
+			} else if (wasEnabled)
+				if (username != null)
 					writeToChat("move.config.chat.server.disable.user", SmartMovingInfo.ConfigChatId, username);
 				else
 					writeToChat("move.config.chat.server.disable", SmartMovingInfo.ConfigChatId);
 		}
 	}
 
-	public void writeServerDeconfigMessageToChat()
-	{
-		if(_configChatServer.value)
+	public void writeServerDeconfigMessageToChat() {
+		if (_configChatServer.value)
 			writeToChat("move.config.chat.server.local", SmartMovingInfo.DefaultChatId);
 	}
 
-	public void writeServerSpeedMessageToChat(String username, boolean everyone)
-	{
-		if(Minecraft.getInstance().player.getGameProfile().getName().equals(username))
+	public void writeServerSpeedMessageToChat(String username, boolean everyone) {
+		if (Minecraft.getInstance().player.getGameProfile().getName().equals(username))
 			writeClientSpeedMessageToChat(everyone);
-		else if(_speedChatServer.value)
-		{
+		else if (_speedChatServer.value) {
 			Object percent = SmartMovingContext.Config.getSpeedPercent();
 			String prefix = "move.speed.chat.server.";
-			if(percent.equals(SmartMovingConfig.defaultSpeedPercent))
+			if (percent.equals(SmartMovingConfig.defaultSpeedPercent))
 				writeToChat(prefix + "reset", SmartMovingInfo.SpeedChatId, username);
 			else
 				writeToChat(prefix + "change", SmartMovingInfo.SpeedChatId, percent, username);
 		}
 	}
 
-	public static void writeNoRightsToChangeConfigMessageToChat(boolean isRemote)
-	{
+	public static void writeNoRightsToChangeConfigMessageToChat(boolean isRemote) {
 		writeToChat("move.config.chat.server.illegal." + (isRemote ? "remote" : "local"), SmartMovingInfo.ConfigChatId);
 	}
 
-	public static void writeNoRightsToChangeSpeedMessageToChat(boolean isRemote)
-	{
+	public static void writeNoRightsToChangeSpeedMessageToChat(boolean isRemote) {
 		writeToChat("move.speed.chat.server.illegal." + (isRemote ? "remote" : "local"), SmartMovingInfo.SpeedChatId);
 	}
 
-	private static void writeToChat(String key, int id, Object... parameters)
-	{
+	private static void writeToChat(String key, int id, Object... parameters) {
 		// 1.8.9: I18n.format(key[, params]) -> 1.20.1: I18n.get(key[, params])
 		String message = parameters == null || parameters.length == 0
-			? I18n.get(key)
-			: I18n.get(key, parameters);
+				? I18n.get(key)
+				: I18n.get(key, parameters);
 
 		// 1.8.9: Minecraft.getMinecraft().ingameGUI.getChatGUI() (GuiNewChat)
 		// 1.20.1: Minecraft.getInstance().gui.getChat() (ChatComponent)
 		ChatComponent guiChat = Minecraft.getInstance().gui.getChat();
 
 		// 1.8.9 replaced the previous status line in place using the numeric chat id:
-		//   for(i<5) guiChat.deleteChatLine(id);
-		//   guiChat.printChatMessageWithOptionalDeletion(new ChatComponentText(message), id);
-		// 1.20.1's ChatComponent no longer exposes id-based line deletion, so the message is
-		// added directly. The user-visible text is preserved 1:1; the in-place replacement
-		// (anti-spam) is NOTE[chat-layer]: deferred -- no suitable 1.20.1 hook yet; server-side only.
+		// for(i<5) guiChat.deleteChatLine(id);
+		// guiChat.printChatMessageWithOptionalDeletion(new ChatComponentText(message),
+		// id);
+		// 1.20.1's ChatComponent no longer exposes id-based line deletion, so the
+		// message is
+		// added directly. The user-visible text is preserved 1:1; the in-place
+		// replacement
+		// (anti-spam) is NOTE[chat-layer]: deferred -- no suitable 1.20.1 hook yet;
+		// server-side only.
 		guiChat.addMessage(Component.literal(message));
 	}
 
-	public static void initialize(boolean redPowerWiring, boolean buildCraftTransportation, boolean finiteLiquid, boolean betterThanWolves, boolean singlePlayerCommands, boolean ropesPlus, boolean aSGrapplingHook, boolean betterMisc)
-	{
+	public static void initialize(boolean redPowerWiring, boolean buildCraftTransportation, boolean finiteLiquid,
+			boolean betterThanWolves, boolean singlePlayerCommands, boolean ropesPlus, boolean aSGrapplingHook,
+			boolean betterMisc) {
 		hasRedPowerWire = redPowerWiring;
 		hasBuildCraftTransportation = buildCraftTransportation;
 		hasFiniteLiquid = finiteLiquid;
@@ -335,23 +365,25 @@ public class SmartMovingOptions extends SmartMovingClientConfig
 		hasBetterMisc = betterMisc;
 	}
 
-	public void resetForNewGame()
-	{
+	public void resetForNewGame() {
 		gameType = -1;
 	}
 
-	public void initializeForGameIfNeccessary()
-	{
-		// 1.8.9: PlayerControllerMP controller = Minecraft.getMinecraft().playerController;
-		//        int currentGameType = ((GameType)Reflect.GetField(_currentGameType, controller)).getID();
-		// 1.20.1: the game type is exposed publicly, so the SmartMovingInstall reflection
-		//         (PlayerControllerMP_currentGameType) is replaced by MultiPlayerGameMode#getPlayerMode().
+	public void initializeForGameIfNeccessary() {
+		// 1.8.9: PlayerControllerMP controller =
+		// Minecraft.getMinecraft().playerController;
+		// int currentGameType = ((GameType)Reflect.GetField(_currentGameType,
+		// controller)).getID();
+		// 1.20.1: the game type is exposed publicly, so the SmartMovingInstall
+		// reflection
+		// (PlayerControllerMP_currentGameType) is replaced by
+		// MultiPlayerGameMode#getPlayerMode().
 		MultiPlayerGameMode controller = Minecraft.getInstance().gameMode;
-		if(controller == null)
+		if (controller == null)
 			return;
 
 		int currentGameType = controller.getPlayerMode().getId();
-		if(currentGameType == gameType)
+		if (currentGameType == gameType)
 			return;
 
 		gameType = currentGameType;
@@ -359,8 +391,7 @@ public class SmartMovingOptions extends SmartMovingClientConfig
 		String[] keys = null;
 		String defaultKey = null;
 
-		switch(gameType)
-		{
+		switch (gameType) {
 			case Survival:
 				keys = _survivalConfigKeys.value;
 				defaultKey = _survivalDefaultConfigKey.value;
@@ -378,17 +409,16 @@ public class SmartMovingOptions extends SmartMovingClientConfig
 		}
 
 		setKeys(keys);
-		if(!defaultKey.isEmpty())
+		if (!defaultKey.isEmpty())
 			setCurrentKey(defaultKey);
 
-		if(_configChatInit.value)
+		if (_configChatInit.value)
 			writeClientConfigMessageToChat(false);
 
-		if(isUserSpeedEnabled() && _speedChatInit.value)
-		{
+		if (isUserSpeedEnabled() && _speedChatInit.value) {
 			Object speedPercent = getSpeedPercent();
 
-			if(!speedPercent.equals(defaultSpeedPercent))
+			if (!speedPercent.equals(defaultSpeedPercent))
 				writeToChat("move.speed.chat.client.init", SmartMovingInfo.DefaultChatId, speedPercent);
 		}
 	}

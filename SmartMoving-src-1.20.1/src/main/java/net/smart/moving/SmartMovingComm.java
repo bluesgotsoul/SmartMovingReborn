@@ -24,6 +24,7 @@ package net.smart.moving;
 //   MinecraftServer.getServer()         -> ServerLifecycleHooks.getCurrentServer()
 //   getIntegratedServer()/isSinglePlayer -> getSingleplayerServer()/isSingleplayer()
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.server.ServerLifecycleHooks;
@@ -31,51 +32,59 @@ import net.minecraftforge.server.ServerLifecycleHooks;
 import net.smart.moving.config.*;
 import net.smart.properties.*;
 
-public class SmartMovingComm extends SmartMovingContext implements IPacketReceiver, IPacketSender
-{
+public class SmartMovingComm extends SmartMovingContext implements IPacketReceiver, IPacketSender {
 	@Override
-	public boolean processStatePacket(NetworkEvent.Context context, IEntityPlayerMP player, int entityId, long state)
-	{
+	public boolean processStatePacket(NetworkEvent.Context context, IEntityPlayerMP player, int entityId, long state) {
 		Entity entity = Minecraft.getInstance().level.getEntity(entityId);
-		if(entity == null)
+		if (entity == null)
 			return true;
 
-		// NOTE[movement-layer]: SmartMovingFactory / SmartMovingOther belong to the physics
-		// layer, which is not ported yet. Original 1.8.9 body
-		// (EntityOtherPlayerMP -> RemotePlayer):
-		//   SmartMovingOther moving = SmartMovingFactory.getOtherSmartMoving((RemotePlayer)entity);
-		//   if(moving != null)
-		//       moving.processStatePacket(state);
+		// 1.8.9 -> 1.20.1 PORT NOTE:
+		// Apply the received remote-player movement state to that player's
+		// SmartMovingOther so its
+		// Smart Moving animation (climb / swim / crawl / slide / ...) is visible to
+		// everyone, not just
+		// to the player themselves. EntityOtherPlayerMP -> RemotePlayer. The rest of
+		// the multiplayer
+		// pipeline (transport SmartMovingNetwork, server rebroadcast
+		// SmartMovingServerComm, the
+		// SmartMovingFactory registry, the per-tick handleMultiPlayerTick, and the
+		// renderer reading
+		// SmartMovingFactory.getInstance) is already wired -- this client receiver was
+		// the only missing
+		// link; the original 1.8.9 body was left commented out in the port.
+		if (entity instanceof RemotePlayer) {
+			SmartMovingOther moving = SmartMovingFactory.getOtherSmartMoving((RemotePlayer) entity);
+			if (moving != null)
+				moving.processStatePacket(state);
+		}
 		return true;
 	}
 
 	@Override
-	public boolean processConfigInfoPacket(NetworkEvent.Context context, IEntityPlayerMP player, String info)
-	{
+	public boolean processConfigInfoPacket(NetworkEvent.Context context, IEntityPlayerMP player, String info) {
 		return false;
 	}
 
 	@Override
-	public boolean processConfigContentPacket(NetworkEvent.Context context, IEntityPlayerMP player, String[] content, String username)
-	{
+	public boolean processConfigContentPacket(NetworkEvent.Context context, IEntityPlayerMP player, String[] content,
+			String username) {
 		processConfigPacket(content, username, false);
 		return true;
 	}
 
 	@Override
-	public boolean processConfigChangePacket(NetworkEvent.Context context, IEntityPlayerMP player)
-	{
+	public boolean processConfigChangePacket(NetworkEvent.Context context, IEntityPlayerMP player) {
 		SmartMovingOptions.writeNoRightsToChangeConfigMessageToChat(isConnectedToRemoteServer());
 		return true;
 	}
 
 	@Override
-	public boolean processSpeedChangePacket(NetworkEvent.Context context, IEntityPlayerMP player, int difference, String username)
-	{
-		if(difference == 0)
+	public boolean processSpeedChangePacket(NetworkEvent.Context context, IEntityPlayerMP player, int difference,
+			String username) {
+		if (difference == 0)
 			SmartMovingOptions.writeNoRightsToChangeSpeedMessageToChat(isConnectedToRemoteServer());
-		else
-		{
+		else {
 			Config.changeSpeed(difference);
 			Options.writeServerSpeedMessageToChat(username, Config._globalConfig.value);
 		}
@@ -83,58 +92,51 @@ public class SmartMovingComm extends SmartMovingContext implements IPacketReceiv
 	}
 
 	@Override
-	public boolean processHungerChangePacket(NetworkEvent.Context context, IEntityPlayerMP player, float hunger)
-	{
+	public boolean processHungerChangePacket(NetworkEvent.Context context, IEntityPlayerMP player, float hunger) {
 		return false;
 	}
 
 	@Override
-	public boolean processSoundPacket(NetworkEvent.Context context, IEntityPlayerMP player, String soundId, float distance, float pitch)
-	{
+	public boolean processSoundPacket(NetworkEvent.Context context, IEntityPlayerMP player, String soundId,
+			float distance, float pitch) {
 		return false;
 	}
 
-	private static boolean isConnectedToRemoteServer()
-	{
-		return ServerLifecycleHooks.getCurrentServer() == null || Minecraft.getInstance().getSingleplayerServer() == null || !Minecraft.getInstance().getSingleplayerServer().isSingleplayer();
+	private static boolean isConnectedToRemoteServer() {
+		return ServerLifecycleHooks.getCurrentServer() == null
+				|| Minecraft.getInstance().getSingleplayerServer() == null
+				|| !Minecraft.getInstance().getSingleplayerServer().isSingleplayer();
 	}
 
-	public static void processConfigPacket(String[] content, String username, boolean blockCode)
-	{
+	public static void processConfigPacket(String[] content, String username, boolean blockCode) {
 		boolean isGloballyConfigured = false;
-		if(content != null && content.length == 2 && Options._globalConfig.getCurrentKey().equals(content[0]))
-		{
+		if (content != null && content.length == 2 && Options._globalConfig.getCurrentKey().equals(content[0])) {
 			isGloballyConfigured = "true".equals(content[1]);
 			content = null;
 		}
 
 		boolean wasEnabled = Config.enabled;
 		boolean first = Config != ServerConfig;
-		if(first)
+		if (first)
 			ServerConfig.reset();
 
-		if(content != null)
-			if(content.length != 0)
-			{
+		if (content != null)
+			if (content.length != 0) {
 				ServerConfig.loadFromProperties(content, blockCode);
 				isGloballyConfigured = ServerConfig._globalConfig.value;
-			}
-			else
-			{
+			} else {
 				Config = Options;
 				Options.writeServerDeconfigMessageToChat();
 				return;
 			}
-		else
-		{
+		else {
 			ServerConfig.load(false);
 			ServerConfig.setCurrentKey(null);
 		}
 
 		ServerConfig._globalConfig.value = isGloballyConfigured;
 
-		if(!first)
-		{
+		if (!first) {
 			Options.writeServerReconfigMessageToChat(wasEnabled, username, isGloballyConfigured);
 			return;
 		}
@@ -146,14 +148,12 @@ public class SmartMovingComm extends SmartMovingContext implements IPacketReceiv
 	}
 
 	@Override
-	public void sendPacket(byte[] data)
-	{
+	public void sendPacket(byte[] data) {
 		SmartMovingNetwork.sendToServer(data);
 	}
 
-	public static boolean processBlockCode(String text)
-	{
-		if(!text.startsWith("\u00A70\u00A71") || !text.endsWith("\u00A7f\u00A7f"))
+	public static boolean processBlockCode(String text) {
+		if (!text.startsWith("\u00A70\u00A71") || !text.endsWith("\u00A7f\u00A7f"))
 			return false;
 
 		String codes = text.substring(4, text.length() - 4);
@@ -172,10 +172,10 @@ public class SmartMovingComm extends SmartMovingContext implements IPacketReceiv
 		return true;
 	}
 
-	private static void processBlockCode(String text, String blockCode, Property<?> property, String... value)
-	{
-		if(text.contains(blockCode))
-			processConfigPacket(new String[] { property.getCurrentKey(), value.length > 0 ? value[0] : "false" }, null, true);
+	private static void processBlockCode(String text, String blockCode, Property<?> property, String... value) {
+		if (text.contains(blockCode))
+			processConfigPacket(new String[] { property.getCurrentKey(), value.length > 0 ? value[0] : "false" }, null,
+					true);
 	}
 
 	public static final SmartMovingComm instance = new SmartMovingComm();

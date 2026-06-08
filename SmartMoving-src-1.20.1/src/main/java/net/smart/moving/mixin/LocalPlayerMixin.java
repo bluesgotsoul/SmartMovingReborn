@@ -61,39 +61,43 @@ import net.smart.moving.SmartMoving;
 import net.smart.moving.SmartMovingSelf;
 
 @Mixin(LocalPlayer.class)
-public abstract class LocalPlayerMixin implements IEntityPlayerSP
-{
+public abstract class LocalPlayerMixin implements IEntityPlayerSP {
 	// Inherited from LivingEntity; shadowed so the input-field accessors below
 	// map exactly to the 1.8.9 moveForward / moveStrafing / isJumping fields.
 	// Inherited fields are accessed via LivingEntityAccessor/EntitySaveAccessor
 
-	@Unique private SmartMovingSelf smartmoving$moving;
+	@Unique
+	private SmartMovingSelf smartmoving$moving;
 
 	// Reentrancy guard mirroring PlayerAPI's super.moveEntity bypass: while set,
 	// EntityClientMoveMixin skips the beforeMoveEntity/afterMoveEntity wrap so
 	// localMoveEntity performs a raw vanilla move.
-	@Unique private boolean smartmoving$inLocalMove;
+	@Unique
+	private boolean smartmoving$inLocalMove;
 
 	// Saved cobweb slowdown for the 1.8.9 isInWeb save/restore. 1.20.1 has no
 	// isInWeb boolean -- cobweb sets Entity.stuckSpeedMultiplier (a Vec3) instead.
 	// We emulate the boolean via EntityStuckAccessor and keep the exact multiplier
 	// here so the relocate-move save -> clear -> restore sequence is lossless.
-	@Unique private Vec3 smartmoving$savedStuck;
+	@Unique
+	private Vec3 smartmoving$savedStuck;
 
 	// Reentrancy guard for the FOV hook: while set, the ComputeFovModifierEvent
 	// listener leaves the value alone so localGetFOVMultiplier can read the raw
 	// vanilla getFieldOfViewModifier() (the 1.8.9 super.getFovModifier() value).
-	@Unique private boolean smartmoving$inFovQuery;
 
 	@Unique
-	private LocalPlayer smartmoving$self()
-	{
-		return (LocalPlayer)(Object)this;
+	private boolean smartmoving$inSneakQuery;
+	@Unique
+	private boolean smartmoving$inFovQuery;
+
+	@Unique
+	private LocalPlayer smartmoving$self() {
+		return (LocalPlayer) (Object) this;
 	}
 
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void smartmoving$init(CallbackInfo ci)
-	{
+	private void smartmoving$init(CallbackInfo ci) {
 		smartmoving$moving = new SmartMovingSelf(smartmoving$self(), this);
 	}
 
@@ -102,54 +106,59 @@ public abstract class LocalPlayerMixin implements IEntityPlayerSP
 	// ------------------------------------------------------------------
 
 	@Inject(method = "tick()V", at = @At("HEAD"))
-	private void smartmoving$beforeTick(CallbackInfo ci)
-	{
-		if(smartmoving$moving != null)
+	private void smartmoving$beforeTick(CallbackInfo ci) {
+		if (smartmoving$moving != null)
 			smartmoving$moving.beforeOnUpdate();
 	}
 
 	@Inject(method = "tick()V", at = @At("RETURN"))
-	private void smartmoving$afterTick(CallbackInfo ci)
-	{
-		if(smartmoving$moving != null)
+	private void smartmoving$afterTick(CallbackInfo ci) {
+		if (smartmoving$moving != null)
 			smartmoving$moving.afterOnUpdate();
 	}
 
 	@Inject(method = "aiStep()V", at = @At("HEAD"))
-	private void smartmoving$beforeAiStep(CallbackInfo ci)
-	{
-		if(smartmoving$moving != null)
+	private void smartmoving$beforeAiStep(CallbackInfo ci) {
+		if (smartmoving$moving != null)
 			smartmoving$moving.beforeOnLivingUpdate();
 	}
 
 	@Inject(method = "aiStep()V", at = @At("RETURN"))
-	private void smartmoving$afterAiStep(CallbackInfo ci)
-	{
-		if(smartmoving$moving != null)
+	private void smartmoving$afterAiStep(CallbackInfo ci) {
+		if (smartmoving$moving != null)
 			smartmoving$moving.afterOnLivingUpdate();
 	}
 
 	// NOTE[client-hooks]: remaining method-wrap hooks from SmartMovingPlayerBase
 	// route through SmartMovingSelf and depend on the physics pass; they will be
 	// added as @Inject/@Redirect when SmartMovingSelf bodies are implemented:
-	//   (beforeMoveEntity / afterMoveEntity on move(MoverType,Vec3): wired by EntityClientMoveMixin)
-	//   (moveEntityWithHeading on travel(Vec3): wired by LivingEntityClientTravelMixin)
-	//   (canTriggerWalking on isMovementNoisy: wired by EntityClientWalkMixin)
-	//   (isOnLadder on onClimbable: wired by LivingEntityClientClimbMixin)
-	//   (pushOutOfBlocks on moveTowardsClosestSpace: wired by PlayerClientPushMixin)
-	//   getBrightness / getBrightnessForRender
-	//   isInsideOfMaterial (fluid tag)
-	//   writeEntityToNBT (addAdditionalSaveData)
-	//   (isSneaking: wired above via @Inject on LocalPlayer.isSneaking() -> SmartMovingSelf.isSneaking())
-	//   getFovModifier (Forge ComputeFovModifierEvent: wired by SmartMovingClient.onComputeFovModifier + localGetFOVMultiplier below)
-	//   (beforeTrySleep -> moving.beforeSleepInBedAt(pos) on startSleepInBed: wired by PlayerClientSleepMixin)
-	//   (jump -> moving.jump() on jumpFromGround: wired by LivingEntityClientJumpMixin)
-	//   beforeGetSleepTimer (renderGuiIngame sleep-timer overlay -> Phase C render layer)
-	//   beforeSetPositionAndRotation -> moving.beforeSetPositionAndRotation() (client re-init on
-	//     network position sync). Candidate target Entity.absMoveTo(DDDFF)V (old setPositionAndRotation),
-	//     but the 1.20.1 ClientPacketListener position-packet call site (absMoveTo vs moveTo) is not yet
-	//     verified; left unwired to avoid a silently-wrong target rather than guess.
-
+	// (beforeMoveEntity / afterMoveEntity on move(MoverType,Vec3): wired by
+	// EntityClientMoveMixin)
+	// (moveEntityWithHeading on travel(Vec3): wired by
+	// LivingEntityClientTravelMixin)
+	// (canTriggerWalking on isMovementNoisy: wired by EntityClientWalkMixin)
+	// (isOnLadder on onClimbable: wired by LivingEntityClientClimbMixin)
+	// (pushOutOfBlocks on moveTowardsClosestSpace: wired by PlayerClientPushMixin)
+	// getBrightness / getBrightnessForRender
+	// isInsideOfMaterial (fluid tag)
+	// writeEntityToNBT (addAdditionalSaveData)
+	// (isSneaking: wired above via @Inject on LocalPlayer.isSneaking() ->
+	// SmartMovingSelf.isSneaking())
+	// getFovModifier (Forge ComputeFovModifierEvent: wired by
+	// SmartMovingClient.onComputeFovModifier + localGetFOVMultiplier below)
+	// (beforeTrySleep -> moving.beforeSleepInBedAt(pos) on startSleepInBed: wired
+	// by PlayerClientSleepMixin)
+	// (jump -> moving.jump() on jumpFromGround: wired by
+	// LivingEntityClientJumpMixin)
+	// beforeGetSleepTimer (renderGuiIngame sleep-timer overlay -> Phase C render
+	// layer)
+	// beforeSetPositionAndRotation -> moving.beforeSetPositionAndRotation() (client
+	// re-init on
+	// network position sync). Candidate target Entity.absMoveTo(DDDFF)V (old
+	// setPositionAndRotation),
+	// but the 1.20.1 ClientPacketListener position-packet call site (absMoveTo vs
+	// moveTo) is not yet
+	// verified; left unwired to avoid a silently-wrong target rather than guess.
 
 	// ------------------------------------------------------------------
 	// SmartMoving isSneaking redirect
@@ -159,185 +168,178 @@ public abstract class LocalPlayerMixin implements IEntityPlayerSP
 	// hitbox/render code sees the SmartMoving-adjusted sneaking state.
 	// ------------------------------------------------------------------
 	@Inject(method = "isShiftKeyDown()Z", at = @At("HEAD"), cancellable = true)
-	private void smartmoving$isShiftKeyDown(CallbackInfoReturnable<Boolean> cir)
-	{
+	private void smartmoving$isShiftKeyDown(CallbackInfoReturnable cir) {
+		// Если мы тут из-за localIsSneaking() — не перехватываем: пусть отработает
+		// RAW-ванильный
+		// isShiftKeyDown() (чистое состояние клавиши = 1.8.9 super.isSneaking()). Иначе
+		// isSneaking()
+		// в ветке ((sp.isPassenger() || !Config.enabled) && isp.localIsSneaking())
+		// снова влетит сюда
+		// -> localIsSneaking() -> сюда -> бесконечная рекурсия -> StackOverflowError.
+		if (smartmoving$inSneakQuery)
+			return;
+
 		SmartMoving moving = smartmoving$moving;
-		if(moving instanceof SmartMovingSelf)
-			cir.setReturnValue(((SmartMovingSelf)moving).isSneaking());
+		if (moving instanceof SmartMovingSelf)
+			cir.setReturnValue(((SmartMovingSelf) moving).isSneaking());
 	}
 	// ------------------------------------------------------------------
 	// IEntityPlayerSP
 	// ------------------------------------------------------------------
 
 	@Override
-	public SmartMoving getMoving()
-	{
+	public SmartMoving getMoving() {
 		return smartmoving$moving;
 	}
 
 	@Override
-	public boolean getSleepingField()
-	{
+	public boolean getSleepingField() {
 		return smartmoving$self().isSleeping();
 	}
 
 	@Override
-	public boolean getIsJumpingField()
-	{
-		return ((LivingEntityAccessor)this).smartmoving$getJumping();
+	public boolean getIsJumpingField() {
+		return ((LivingEntityAccessor) this).smartmoving$getJumping();
 	}
 
 	@Override
-	public void setIsJumpingField(boolean flag)
-	{
-		((LivingEntityAccessor)this).smartmoving$setJumping(flag);
+	public void setIsJumpingField(boolean flag) {
+		((LivingEntityAccessor) this).smartmoving$setJumping(flag);
 	}
 
 	@Override
-	public boolean getIsInWebField()
-	{
+	public boolean getIsInWebField() {
 		// 1.8.9 Entity.isInWeb -> 1.20.1 Entity.stuckSpeedMultiplier (cobweb sets it
 		// non-zero via makeStuckInBlock); "in web" iff the multiplier is non-zero.
-		Vec3 multiplier = ((EntityStuckAccessor)(Object)this).smartmoving$getStuckSpeedMultiplier();
+		Vec3 multiplier = ((EntityStuckAccessor) (Object) this).smartmoving$getStuckSpeedMultiplier();
 		return multiplier != null && multiplier.lengthSqr() > 1.0E-7D;
 	}
 
 	@Override
-	public void setIsInWebField(boolean b)
-	{
+	public void setIsInWebField(boolean b) {
 		// Mirror the 1.8.9 isInWeb writes (save -> clear -> restore). Clearing stores
 		// the current multiplier so it can be restored byte-for-byte; setting true
 		// restores the saved value, falling back to the vanilla cobweb multiplier.
-		EntityStuckAccessor accessor = (EntityStuckAccessor)(Object)this;
-		if(b)
-		{
+		EntityStuckAccessor accessor = (EntityStuckAccessor) (Object) this;
+		if (b) {
 			Vec3 restore = smartmoving$savedStuck;
-			if(restore == null || restore.lengthSqr() <= 1.0E-7D)
-				restore = new Vec3(0.25D, (double)0.05F, 0.25D);
+			if (restore == null || restore.lengthSqr() <= 1.0E-7D)
+				restore = new Vec3(0.25D, (double) 0.05F, 0.25D);
 			accessor.smartmoving$setStuckSpeedMultiplier(restore);
-		}
-		else
-		{
+		} else {
 			smartmoving$savedStuck = accessor.smartmoving$getStuckSpeedMultiplier();
 			accessor.smartmoving$setStuckSpeedMultiplier(Vec3.ZERO);
 		}
 	}
 
 	@Override
-	public Minecraft getMcField()
-	{
+	public Minecraft getMcField() {
 		return Minecraft.getInstance();
 	}
 
 	@Override
-	public void setMoveForwardField(float f)
-	{
-		((LivingEntityAccessor)this).smartmoving$setZza(f);
+	public void setMoveForwardField(float f) {
+		((LivingEntityAccessor) this).smartmoving$setZza(f);
 	}
 
 	@Override
-	public void setMoveStrafingField(float f)
-	{
-		((LivingEntityAccessor)this).smartmoving$setXxa(f);
+	public void setMoveStrafingField(float f) {
+		((LivingEntityAccessor) this).smartmoving$setXxa(f);
 	}
 
 	@Override
-	public void localMoveEntity(double d, double d1, double d2)
-	{
+	public void localMoveEntity(double d, double d1, double d2) {
 		// 1.8.9 super.moveEntity(d,d1,d2) -> raw vanilla move(MoverType.SELF, Vec3).
 		// The guard keeps EntityClientMoveMixin from re-wrapping this raw move with
 		// beforeMoveEntity/afterMoveEntity (matches PlayerAPI's super bypass).
 		smartmoving$inLocalMove = true;
-		try
-		{
+		try {
 			smartmoving$self().move(MoverType.SELF, new Vec3(d, d1, d2));
-		}
-		finally
-		{
+		} finally {
 			smartmoving$inLocalMove = false;
 		}
 	}
 
 	@Override
-	public boolean isInLocalMove()
-	{
+	public boolean isInLocalMove() {
 		return smartmoving$inLocalMove;
 	}
 
 	@Override
-	public Either<Player.BedSleepingProblem, Unit> localSleepInBedAt(BlockPos pos)
-	{
+	public Either<Player.BedSleepingProblem, Unit> localSleepInBedAt(BlockPos pos) {
 		// 1.8.9 super.trySleep(pos) -> 1.20.1 Player.startSleepInBed(BlockPos)
 		return smartmoving$self().startSleepInBed(pos);
 	}
 
 	@Override
-	public float localGetBrightness(float f)
-	{
+	public float localGetBrightness(float f) {
 		// 1.8.9 super.getBrightness(f) -> 1.20.1 getLightLevelDependentMagicValue()
 		return smartmoving$self().getLightLevelDependentMagicValue();
 	}
 
 	@Override
-	public int localGetBrightnessForRender(float f)
-	{
+	public int localGetBrightnessForRender(float f) {
 		// 1.8.9 super.getBrightnessForRender(f) returned packed (sky<<4|block).
 		// 1.20.1 equivalent: LightTexture.pack(block, sky) from the level light engine.
 		LocalPlayer self = smartmoving$self();
 		BlockPos pos = self.blockPosition();
 		int block = self.level().getBrightness(LightLayer.BLOCK, pos);
-		int sky   = self.level().getBrightness(LightLayer.SKY,   pos);
+		int sky = self.level().getBrightness(LightLayer.SKY, pos);
 		return LightTexture.pack(block, sky);
 	}
 
 	@Override
-	public void localUpdateEntityActionState()
-	{
+	public void localUpdateEntityActionState() {
 		// NOTE[client-hooks]: the vanilla aiStep() code (the 1.20.1 equivalent of
 		// updateEntityActionState) already ran before this point -- the inject fires
 		// at aiStep() RETURN. No re-entry needed; deliberate no-op.
 	}
 
 	@Override
-	public boolean localIsInsideOfMaterial(TagKey<Fluid> fluidTag)
-	{
+	public boolean localIsInsideOfMaterial(TagKey<Fluid> fluidTag) {
 		// 1.8.9 super.isInsideOfMaterial(material) -> 1.20.1 eye-in-fluid-tag check
 		return smartmoving$self().isEyeInFluid(fluidTag);
 	}
 
 	@Override
-	public void localWriteEntityToNBT(CompoundTag compoundTag)
-	{
-		// 1.8.9 super.writeEntityToNBT(tag) -> 1.20.1 Entity.addAdditionalSaveData(CompoundTag)
-		((EntitySaveAccessor)this).smartmoving$addAdditionalSaveData(compoundTag);
+	public void localWriteEntityToNBT(CompoundTag compoundTag) {
+		// 1.8.9 super.writeEntityToNBT(tag) -> 1.20.1
+		// Entity.addAdditionalSaveData(CompoundTag)
+		((EntitySaveAccessor) this).smartmoving$addAdditionalSaveData(compoundTag);
 	}
 
 	@Override
-	public boolean localIsSneaking()
-	{
-		return smartmoving$self().isShiftKeyDown();
+	public boolean localIsSneaking() {
+		// 1.8.9 super.isSneaking() = RAW-ванильное состояние шифта. Guard глушит наш
+		// собственный
+		// isShiftKeyDown()-хук на время этого вызова, иначе он уведёт обратно в
+		// SmartMovingSelf.isSneaking()
+		// (рекурсия -> StackOverflow). Тот же паттерн, что smartmoving$inFovQuery /
+		// smartmoving$inLocalMove.
+		smartmoving$inSneakQuery = true;
+		try {
+			return smartmoving$self().isShiftKeyDown();
+		} finally {
+			smartmoving$inSneakQuery = false;
+		}
 	}
 
 	@Override
-	public float localGetFOVMultiplier()
-	{
-		// 1.8.9 super.getFovModifier() -> 1.20.1 AbstractClientPlayer.getFieldOfViewModifier().
+	public float localGetFOVMultiplier() {
+		// 1.8.9 super.getFovModifier() -> 1.20.1
+		// AbstractClientPlayer.getFieldOfViewModifier().
 		// The guard makes the ComputeFovModifierEvent listener leave this inner
 		// vanilla computation alone, mirroring PlayerAPI's super-call bypass.
 		smartmoving$inFovQuery = true;
-		try
-		{
+		try {
 			return smartmoving$self().getFieldOfViewModifier();
-		}
-		finally
-		{
+		} finally {
 			smartmoving$inFovQuery = false;
 		}
 	}
 
 	@Override
-	public boolean isInFovQuery()
-	{
+	public boolean isInFovQuery() {
 		return smartmoving$inFovQuery;
 	}
 }

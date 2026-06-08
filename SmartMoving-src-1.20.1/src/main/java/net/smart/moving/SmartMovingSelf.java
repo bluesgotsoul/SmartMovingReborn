@@ -2811,31 +2811,22 @@ public class SmartMovingSelf extends SmartMoving implements ISmartMovingSelf {
 	// ----------------------------------------------------------------------
 
 	public void resetHeightOffset() {
-		AABB bb = getBoundingBox();
-		bb = new AABB(bb.minX, bb.minY + heightOffset, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
-		setBoundingBox(bb);
-		// 1.8.9 also did sp.height -= heightOffset here. In 1.20.1 the player size
-		// is Pose/EntityDimensions-driven and is applied by the crawl/small
-		// dimension pass; heightOffset drives only the bounding box + render here.
+		if (heightOffset == 0F)
+			return;
 		heightOffset = 0F;
+		sp.refreshDimensions(); // вернуть полные габариты немедленно
 	}
 
 	public void resetInternalHeightOffset() {
-		// 1.8.9 adjusted sp.height directly; in 1.20.1 size is
-		// Pose/EntityDimensions-driven.
 		heightOffset = 0F;
+		// рефреш не нужен: путь сна, габариты пересчитает ванильная поза сна
 	}
 
 	public void setHeightOffset(float offset) {
-		resetHeightOffset();
-		if (offset == 0F)
+		if (offset == heightOffset)
 			return;
-
 		heightOffset = offset;
-
-		AABB bb = getBoundingBox();
-		bb = new AABB(bb.minX, bb.minY - heightOffset, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
-		setBoundingBox(bb);
+		sp.refreshDimensions(); // коробка станет реально ниже через override из 16a
 	}
 
 	// ----------------------------------------------------------------------

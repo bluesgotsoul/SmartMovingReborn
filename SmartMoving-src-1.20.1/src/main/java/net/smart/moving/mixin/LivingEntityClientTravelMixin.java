@@ -5,42 +5,35 @@
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-//
-// Smart Moving is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Smart Moving. If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================
 //
 // Client-only base-class mixin for net.minecraft.world.entity.LivingEntity.
+// Replaces vanilla travel() for the local player with Smart Moving physics
+// (SmartMovingSelf.moveEntityWithHeading) -- a 1:1 of the old PlayerAPI override.
 //
-// 1.20.1 port of the movement override that the PlayerAPI client base
-// (SmartMovingPlayerBase) performed:
-//   public void moveEntityWithHeading(float f, float f1) { moving.moveEntityWithHeading(f, f1); }
-// This override fully REPLACED vanilla moveEntityWithHeading (PlayerAPI installs
-// the override, so the vanilla body never ran). SmartMovingSelf.superMoveEntityWithHeading
-// is a complete reimplementation (handleSwimming/handleLava/handleAlternativeFlying/
-// handleLand + jump/wall-jump/exhaustion) and never calls back into vanilla, so there
-// is no localMoveEntityWithHeading bridge in the original either.
+// INPUT-STATE FIX (Step 17, corrected): 1.8.9 EntityPlayerSP.onLivingUpdate() ran
+// updateEntityActionState() EVERY tick (PlayerAPI invoked it automatically), in this strict order:
+//   1. movementInput updated (sneak/sprint/jump buttons)        <- LocalPlayer.aiStep() body
+//   2. super.onLivingUpdate() -> updateEntityActionState()      <- jumpAvoided=false, sets `jumping`
+//   3. vanilla jump block -> jump()  (-> jumpAvoided=true)       <- same super call
+//   4. moveEntityWithHeading() -> handleJumping() reads jumpAvoided
+// The 1.20.1 equivalent of step 2 is the HEAD of LivingEntity.aiStep(), reached from
+// LocalPlayer.aiStep() via super.aiStep(): AFTER input.tick (fresh buttons) and BEFORE the jump block.
 //
-// In 1.20.1 vanilla moveEntityWithHeading(moveStrafing, moveForward) is
-// LivingEntity.travel(Vec3) which the aiStep call site invokes as
-//   travel(new Vec3(xxa, yya, zza))
-// i.e. travelVector.x == moveStrafing and travelVector.z == moveForward (the
-// vertical yya was never a parameter of the 1.8.9 signature, so it is dropped).
-// We inject @At HEAD, run moving.moveEntityWithHeading(strafe, forward) and
-// ci.cancel() so the vanilla travel body does not also run -- a faithful 1:1 of
-// the PlayerAPI override. The custom physics calls sp.move(...) internally, which
-// in turn is wrapped by EntityClientMoveMixin (before/afterMoveEntity).
+// The first revision called updateEntityActionState(false) at travel() HEAD instead. travel() runs
+// AFTER the jump block, so updateEntityActionState's first line (jumpAvoided = false) WIPED the flag
+// the vanilla jump hook had just set, right before handleJumping() read it -> the player could NEVER
+// jump. It also applied the exhaustion sprint-stop (setSprinting(false)) too late to affect that
+// tick's movement -> stamina drained but running never stopped.
 //
-// LocalPlayer does not declare travel(), so the inject must target the declaring
-// class LivingEntity. Dispatch is guarded by instanceof LocalPlayer (matching the
-// EntityMixin / EntityClientMoveMixin pattern) so only the local player is
-// affected. This mixin is registered client-only, so referencing LocalPlayer /
-// SmartMovingSelf here is safe (never loaded on a dedicated server).
+// FIX: run the per-tick updateEntityActionState(false) at aiStep() HEAD (the faithful 1.8.9 spot).
+// jumpAvoided now survives to handleJumping (jump works), and setSprinting(false) is applied before
+// movement (exhaustion actually gates running). Crouch/crawl/climb/slide input still works (the state
+// machine still runs every tick) and Step 16's flight hitbox shrink still runs (aiStep fires every
+// tick, including ability-flight).
+//
+// FLIGHT FIX (Step 14): when getAbilities().flying we do NOT cancel vanilla travel(), so
+// creative/spectator flight keeps exact vanilla speed and the sprint-fly x2 boost.
 
 package net.smart.moving.mixin;
 
@@ -58,19 +51,51 @@ import net.smart.moving.SmartMoving;
 import net.smart.moving.SmartMovingSelf;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityClientTravelMixin
-{
-	@Inject(method = "travel(Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"), cancellable = true)
-	private void smartmoving$travel(Vec3 travelVector, CallbackInfo ci)
-	{
+public abstract class LivingEntityClientTravelMixin {
+	// Шаг 17 (исправлено): потиковый прогон машины состояний в ВЕРНОЙ точке 1.8.9
+	// -- HEAD
+	// LivingEntity.aiStep(). Сюда исполнение приходит из LocalPlayer.aiStep() через
+	// super.aiStep():
+	// УЖЕ после input.tick (свежие шифт/спринт/прыжок) и ДО ванильного jump-блока и
+	// travel().
+	// Метод опрашивает кнопки и крутит машину
+	// приседа/ползания/лазания/слайда/спринта/полёта,
+	// выставляет поле jumping и сбрасывает jumpAvoided=false -- ровно перед
+	// jump-блоком, поэтому
+	// ванильный jump-хук (jump() -> jumpAvoided=true) НЕ затирается и
+	// handleJumping() срабатывает.
+	// Раньше вызов стоял в HEAD travel() (после jump-блока) -> jumpAvoided=false
+	// стирал флаг перед
+	// чтением (прыжок не работал), а setSprinting(false) опаздывал на движение тика
+	// (бег не
+	// останавливался при истощении). Guard instanceof LocalPlayer: для остальных
+	// LivingEntity no-op.
+	@Inject(method = "aiStep()V", at = @At("HEAD"))
+	private void smartmoving$aiStepActionState(CallbackInfo ci) {
 		Object self = this;
-		if(self instanceof LocalPlayer)
-		{
-			IEntityPlayerSP isp = (IEntityPlayerSP)self;
+		if (self instanceof LocalPlayer) {
+			IEntityPlayerSP isp = (IEntityPlayerSP) self;
 			SmartMoving moving = isp.getMoving();
-			if(moving instanceof SmartMovingSelf)
-			{
-				((SmartMovingSelf)moving).moveEntityWithHeading((float)travelVector.x, (float)travelVector.z);
+			if (moving instanceof SmartMovingSelf)
+				((SmartMovingSelf) moving).updateEntityActionState(false);
+		}
+	}
+
+	@Inject(method = "travel(Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"), cancellable = true)
+	private void smartmoving$travel(Vec3 travelVector, CallbackInfo ci) {
+		Object self = this;
+		if (self instanceof LocalPlayer) {
+			// Шаг 14: креатив/спектатор-полёт по способностям -> движение отдаём ванильному
+			// travel()
+			// (точная скорость полёта и спринт-буст x2). Состояние действий уже обновлено в
+			// smartmoving$aiStepActionState выше (этот же тик).
+			if (((LocalPlayer) self).getAbilities().flying)
+				return;
+
+			IEntityPlayerSP isp = (IEntityPlayerSP) self;
+			SmartMoving moving = isp.getMoving();
+			if (moving instanceof SmartMovingSelf) {
+				((SmartMovingSelf) moving).moveEntityWithHeading((float) travelVector.x, (float) travelVector.z);
 				ci.cancel();
 			}
 		}

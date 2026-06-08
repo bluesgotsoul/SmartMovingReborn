@@ -1,2 +1,1 @@
 net/smart/moving/mixin/ServerGamePacketHungerMixin player f_9743_
-net/smart/moving/mixin/PlayerMixin canEnterPose (Lnet/minecraft/world/entity/Pose;)Z m_20175_
